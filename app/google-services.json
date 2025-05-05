@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "527916194511",
+    "project_id": "helplyt",
+    "storage_bucket": "helplyt.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:527916194511:android:6cc14383b72885deb675ba",
+        "android_client_info": {
+          "package_name": "com.example.helplyt"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBTuKmb1NiFQkblCgMWqtBa9PaqehCQEdI"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
