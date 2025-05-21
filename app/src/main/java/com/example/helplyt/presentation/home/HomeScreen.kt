@@ -93,16 +93,21 @@ fun HomeScreen(
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Button(
-                onClick = onCreateAdClick,
+                onClick = {
+                    navController.navigate("createAd") // Przenosi do ekranu CreateAdScreen
+                },
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(50.dp)
             ) {
                 Text(text = "Stwórz ogłoszenie")
             }
+
             Spacer(modifier = Modifier.height(16.dp))
             Button(
-                onClick = onBrowseAdsClick,
+                onClick = {
+                    navController.navigate("Advertisement") // Przenosi do ekranu CreateAdScreen
+                },
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(50.dp)

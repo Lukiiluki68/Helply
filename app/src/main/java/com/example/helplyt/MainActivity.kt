@@ -23,7 +23,7 @@ class MainActivity : ComponentActivity() {
 
         try {
             FirebaseApp.initializeApp(this)
-            setContent {  // TO JEST JEDYNE MIEJSCE GDZIE POWINNO BYĆ setContent
+            setContent {
                 val auth = FirebaseAuth.getInstance()
                 val authRepository: AuthRepository = AuthRepositoryImpl(auth)
 
@@ -43,7 +43,5 @@ class MainActivity : ComponentActivity() {
                 Text("Initialization error: ${e.localizedMessage}")
             }
         }
-
-        // USUŃ CAŁĄ RESZTĘ KODU PO TYM BLOKU TRY-CATCH
     }
 }

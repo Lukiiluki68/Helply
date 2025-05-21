@@ -25,7 +25,6 @@ fun LoginScreen(
     var password by remember { mutableStateOf("") }
     var rememberMe by remember { mutableStateOf(false) }
 
-    // Automatyczne wczytanie zapisanych danych przy starcie ekranu
     LaunchedEffect(Unit) {
         val (savedEmail, savedPassword, savedRememberMe) = userPrefs.loadCredentials()
         if (savedRememberMe && savedEmail != null && savedPassword != null) {

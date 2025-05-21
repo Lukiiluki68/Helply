@@ -1,5 +1,7 @@
 package com.example.app.navigation
 
+import AdvertisementScreen
+import CreateAdScreen
 import LoginScreen
 import LoginViewModel
 import RegisterScreen
@@ -14,6 +16,8 @@ sealed class Screen(val route: String) {
     object Login : Screen("login")
     object Register : Screen("register")
     object Home : Screen("home")
+    object CreateAd : Screen("createAd")
+    object Advertisement : Screen("advertisement")
 }
 
 @Composable
@@ -40,6 +44,18 @@ fun AppNavigation(
         composable(Screen.Home.route) {
             HomeScreen(
                 navController = navController
+            )
+        }
+        composable(Screen.CreateAd.route) {
+            CreateAdScreen(
+                navController = navController,
+                onBack = { navController.popBackStack() }
+            )
+        }
+        composable(Screen.Advertisement.route) {
+            AdvertisementScreen(
+                navController = navController,
+             //   onBack = { navController.popBackStack() }
             )
         }
 
