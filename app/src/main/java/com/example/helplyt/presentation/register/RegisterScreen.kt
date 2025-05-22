@@ -1,26 +1,21 @@
 import android.widget.Toast
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Button
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
-import androidx.compose.material3.TextField
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.layout.*
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Email
+import androidx.compose.material.icons.filled.Lock
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import com.example.app.presentation.register.RegisterViewModel
 import com.example.app.utils.ValidationUtils.isEmailValid
 import com.example.app.utils.ValidationUtils.isPasswordValid
+import com.example.helplyt.R
 
 @Composable
 fun RegisterScreen(
@@ -31,50 +26,110 @@ fun RegisterScreen(
     val context = LocalContext.current
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
+    var confirmPassword by remember { mutableStateOf("") }
 
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .padding(16.dp),
+            .padding(horizontal = 24.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
-        TextField(value = email, onValueChange = { email = it }, label = { Text("Email") })
-        Spacer(modifier = Modifier.height(8.dp))
+        Image(
+            painter = painterResource(id = R.drawable.login_logo),
+            contentDescription = null,
+            modifier = Modifier
+                .size(325.dp)
+                .padding(bottom = 24.dp)
+        )
+
+        TextField(
+            value = email,
+            onValueChange = { email = it },
+            label = { Text("Email") },
+            leadingIcon = {
+                Icon(imageVector = Icons.Default.Email, contentDescription = null)
+            },
+            modifier = Modifier.fillMaxWidth()
+        )
+
+        Spacer(modifier = Modifier.height(12.dp))
+
         TextField(
             value = password,
             onValueChange = { password = it },
             label = { Text("Hasło") },
-            visualTransformation = PasswordVisualTransformation()
+            visualTransformation = PasswordVisualTransformation(),
+            leadingIcon = {
+                Icon(imageVector = Icons.Default.Lock, contentDescription = null)
+            },
+            modifier = Modifier.fillMaxWidth()
         )
+
         Spacer(modifier = Modifier.height(16.dp))
-        Button(onClick = {
-            when {
-                !isEmailValid(email) -> {
-                    Toast.makeText(context, "Nieprawidłowy adres email", Toast.LENGTH_LONG).show()
-                }
-                !isPasswordValid(password) -> {
-                    Toast.makeText(
-                        context,
-                        "Hasło musi mieć min. 8 znaków, 1 dużą literę, 1 cyfrę i 1 znak specjalny",
-                        Toast.LENGTH_LONG
-                    ).show()
-                }
-                else -> {
-                    viewModel.register(email, password) {
-                        if (it.isSuccess) {
-                            Toast.makeText(context, "Rejestracja zakończona sukcesem", Toast.LENGTH_LONG).show()
-                            onRegisterSuccess()
-                        } else {
-                            Toast.makeText(context, it.exceptionOrNull()?.message ?: "Błąd", Toast.LENGTH_LONG).show()
+
+        TextField(
+            value = confirmPassword,
+            onValueChange = { confirmPassword = it },
+            label = { Text("Powtórz Hasło") },
+            visualTransformation = PasswordVisualTransformation(),
+            leadingIcon = {
+                Icon(imageVector = Icons.Default.Lock, contentDescription = null)
+            },
+            modifier = Modifier.fillMaxWidth()
+        )
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        Button(
+            onClick = {
+                when {
+                    !isEmailValid(email) -> {
+                        Toast.makeText(context, "Nieprawidłowy adres email", Toast.LENGTH_LONG).show()
+                    }
+
+                    !isPasswordValid(password) -> {
+                        Toast.makeText(
+                            context,
+                            "Hasło musi mieć min. 8 znaków, 1 dużą literę, 1 cyfrę i 1 znak specjalny",
+                            Toast.LENGTH_LONG
+                        ).show()
+                    }
+                    password != confirmPassword -> {
+                        Toast.makeText(context, "Hasła nie są takie same", Toast.LENGTH_LONG).show()
+                    }
+
+                    else -> {
+                        viewModel.register(email, password) {
+                            if (it.isSuccess) {
+                                Toast.makeText(context, "Rejestracja zakończona sukcesem", Toast.LENGTH_LONG).show()
+                                onRegisterSuccess()
+                            } else {
+                                Toast.makeText(
+                                    context,
+                                    it.exceptionOrNull()?.message ?: "Błąd",
+                                    Toast.LENGTH_LONG
+                                ).show()
+                            }
                         }
                     }
                 }
-            }
-        }) {
-            Text("Zarejestruj się")
+            },
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(top = 15.dp, bottom = 25.dp)
+                .height(48.dp),
+            shape = MaterialTheme.shapes.small
+        ) {
+            Text(
+                text = "Zarejestruj się",
+                color = MaterialTheme.colorScheme.onPrimary,
+                style = MaterialTheme.typography.bodyLarge
+            )
         }
 
-        Spacer(modifier = Modifier.height(8.dp))
+        Spacer(modifier = Modifier.height(24.dp))
+
         TextButton(onClick = onNavigateToLogin) {
             Text("Masz już konto? Zaloguj się")
         }

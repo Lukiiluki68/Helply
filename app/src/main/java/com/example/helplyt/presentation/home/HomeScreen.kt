@@ -1,16 +1,30 @@
+package com.example.app.presentation.home
+
 import android.content.Context
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.List
+import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.example.app.data.UserPreferences
+import com.example.helplyt.R
 import com.google.firebase.auth.FirebaseAuth
 import kotlinx.coroutines.launch
 
@@ -21,99 +35,151 @@ fun HomeScreen(
     onBrowseAdsClick: () -> Unit = {},
     onSettingsClick: () -> Unit = {}
 ) {
-    val context = LocalContext.current
-    val scope = rememberCoroutineScope()
-    val userPreferences = remember { UserPreferences(context) }
-    var showMenu by remember { mutableStateOf(false) }
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(
+                Brush.verticalGradient(
+                    colors = listOf(Color(0xFFEFFAF3), Color.White)
+                )
+            )
+    ) {
+        var showMenu by remember { mutableStateOf(false) }
+        val context = LocalContext.current
+        val scope = rememberCoroutineScope()
+        val userPreferences = remember { UserPreferences(context) }
+        val fadeIn by animateFloatAsState(targetValue = 1f, animationSpec = tween(1000))
+        val iconButtonSize = 32.dp
 
-    Scaffold(
-        topBar = {
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(70.dp)
-                    .background(MaterialTheme.colorScheme.primary)
-                    .padding(top = 24.dp),
-                contentAlignment = Alignment.Center
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            contentAlignment = Alignment.TopEnd
+        ) {
+            var showMenu by remember { mutableStateOf(false) }
+
+            IconButton(
+                onClick = { showMenu = true },
+                modifier = Modifier.size(iconButtonSize)
             ) {
-                Row(
-                    modifier = Modifier.fillMaxSize().padding(horizontal = 16.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.SpaceBetween
-                ) {
-                    Text(
-                        text = "Panel użytkownika",
-                        color = MaterialTheme.colorScheme.onPrimary,
-                        style = MaterialTheme.typography.titleLarge
-                    )
+                Icon(
+                    imageVector = Icons.Default.MoreVert,
+                    contentDescription = "Menu",
+                    tint = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.size(iconButtonSize)
+                )
+            }
 
-                    Box {
-                        IconButton(onClick = { showMenu = !showMenu }) {
+            DropdownMenu(
+                expanded = showMenu,
+                onDismissRequest = { showMenu = false },
+                offset = DpOffset(x = (-300).dp, y = 0.dp)
+            ) {
+                DropdownMenuItem(
+                    text = { Text("Profil") },
+                    onClick = {
+                        showMenu = false
+                        // TODO: Akcja profilu
+                    }
+                )
+                DropdownMenuItem(
+                    text = { Text("Ustawienia") },
+                    onClick = {
+                        showMenu = false
+                        // TODO: Akcja ustawień
+                    }
+                )
+                DropdownMenuItem(
+                    text = { Text("Wyloguj się") },
+                    onClick = {
+                        showMenu = false
+                        FirebaseAuth.getInstance().signOut()
+                        scope.launch {
+                            userPreferences.clearCredentials()
+                            navController.navigate("login") {
+                                popUpTo("home") { inclusive = true }
+                            }
+                        }
+                    }
+                )
+            }
+        }
+
+
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(top = 72.dp, start = 24.dp, end = 24.dp)
+                .alpha(fadeIn),
+            verticalArrangement = Arrangement.Center,
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Spacer(modifier = Modifier.height(32.dp))
+
+            Image(
+                painter = painterResource(id = R.drawable.text_logo),
+                contentDescription = null,
+                modifier = Modifier.size(350.dp)
+            )
+
+            Spacer(modifier = Modifier.weight(1f))
+
+            Column(modifier = Modifier.fillMaxWidth()) {
+                Card(
+                    onClick = { navController.navigate("createAd") },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(56.dp),
+                    shape = MaterialTheme.shapes.medium,
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primary)
+                ) {
+                    Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
                             Icon(
-                                imageVector = Icons.Filled.Settings,
-                                contentDescription = "Ustawienia"
+                                imageVector = Icons.Default.Add,
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.onPrimary,
+                                modifier = Modifier.padding(end = 8.dp)
+                            )
+                            Text(
+                                text = "Stwórz ogłoszenie",
+                                color = MaterialTheme.colorScheme.onPrimary,
+                                style = MaterialTheme.typography.bodyLarge
                             )
                         }
-                        DropdownMenu(
-                            expanded = showMenu,
-                            onDismissRequest = { showMenu = false }
-                        ) {
-                            DropdownMenuItem(
-                                text = { Text("Ustawienia") },
-                                onClick = {
-                                    showMenu = false
-                                    onSettingsClick()
-                                }
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                Card(
+                    onClick = { navController.navigate("Advertisement") },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(56.dp),
+                    shape = MaterialTheme.shapes.medium,
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primary)
+                ) {
+                    Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(
+                                imageVector = Icons.Default.List,
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.onPrimary,
+                                modifier = Modifier.padding(end = 8.dp)
                             )
-                            DropdownMenuItem(
-                                text = { Text("Wyloguj się") },
-                                onClick = {
-                                    showMenu = false
-                                    FirebaseAuth.getInstance().signOut()
-                                    scope.launch {
-                                        userPreferences.clearCredentials() // 🧹 czyści zapamiętane dane
-                                        navController.navigate("login") {
-                                            popUpTo("home") { inclusive = true }
-                                        }
-                                    }
-                                }
+                            Text(
+                                text = "Przeglądaj ogłoszenia",
+                                color = MaterialTheme.colorScheme.onPrimary,
+                                style = MaterialTheme.typography.bodyLarge
                             )
                         }
                     }
                 }
             }
-        }
-    ) { innerPadding ->
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(innerPadding)
-                .padding(horizontal = 24.dp),
-            verticalArrangement = Arrangement.Center,
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            Button(
-                onClick = {
-                    navController.navigate("createAd") // Przenosi do ekranu CreateAdScreen
-                },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(50.dp)
-            ) {
-                Text(text = "Stwórz ogłoszenie")
-            }
 
-            Spacer(modifier = Modifier.height(16.dp))
-            Button(
-                onClick = {
-                    navController.navigate("Advertisement") // Przenosi do ekranu CreateAdScreen
-                },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(50.dp)
-            ) {
-                Text(text = "Przeglądaj ogłoszenia")
-            }
+            Spacer(modifier = Modifier.height(400.dp))
         }
     }
 }

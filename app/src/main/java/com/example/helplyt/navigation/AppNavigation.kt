@@ -5,11 +5,11 @@ import CreateAdScreen
 import LoginScreen
 import LoginViewModel
 import RegisterScreen
-import HomeScreen
 import androidx.compose.runtime.Composable
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import com.example.app.presentation.home.HomeScreen
 import com.example.app.presentation.register.RegisterViewModel
 
 sealed class Screen(val route: String) {

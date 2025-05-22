@@ -5,6 +5,7 @@ import android.os.Bundle
 import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.remember
 import androidx.navigation.compose.rememberNavController
@@ -24,19 +25,25 @@ class MainActivity : ComponentActivity() {
         try {
             FirebaseApp.initializeApp(this)
             setContent {
-                val auth = FirebaseAuth.getInstance()
-                val authRepository: AuthRepository = AuthRepositoryImpl(auth)
+                com.example.helplyt.ui.theme.HelplyTTheme(
+                    darkTheme = isSystemInDarkTheme(), // lub false, jeśli chcesz wymusić jasny
+                    dynamicColor = false // bardzo ważne!
+                ) {
+                    val auth = FirebaseAuth.getInstance()
+                    val authRepository: AuthRepository = AuthRepositoryImpl(auth)
 
-                val loginViewModel = remember { LoginViewModel(LoginUseCase(authRepository)) }
-                val registerViewModel = remember { RegisterViewModel(RegisterUseCase(authRepository)) }
+                    val loginViewModel = remember { LoginViewModel(LoginUseCase(authRepository)) }
+                    val registerViewModel = remember { RegisterViewModel(RegisterUseCase(authRepository)) }
 
-                val navController = rememberNavController()
-                AppNavigation(
-                    navController = navController,
-                    loginViewModel = loginViewModel,
-                    registerViewModel = registerViewModel
-                )
+                    val navController = rememberNavController()
+                    AppNavigation(
+                        navController = navController,
+                        loginViewModel = loginViewModel,
+                        registerViewModel = registerViewModel
+                    )
+                }
             }
+
         } catch (e: Exception) {
             Log.e("MainActivity", "Init error", e)
             setContent {
