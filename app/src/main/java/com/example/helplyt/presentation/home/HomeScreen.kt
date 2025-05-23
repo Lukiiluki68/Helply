@@ -5,6 +5,7 @@ import androidx.compose.animation.core.tween
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
@@ -38,11 +39,7 @@ fun HomeScreen(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(
-                Brush.verticalGradient(
-                    colors = listOf(Color(0xFFEFFAF3), Color.White)
-                )
-            )
+            .background(MaterialTheme.colorScheme.background)
     ) {
         var showMenu by remember { mutableStateOf(false) }
         val context = LocalContext.current
@@ -50,6 +47,9 @@ fun HomeScreen(
         val userPreferences = remember { UserPreferences(context) }
         val fadeIn by animateFloatAsState(targetValue = 1f, animationSpec = tween(1000))
         val iconButtonSize = 32.dp
+        val isDark = isSystemInDarkTheme()
+        val logoRes = if (isDark) R.drawable.text_logo_dark else R.drawable.text_logo
+
 
         Box(
             modifier = Modifier
@@ -118,7 +118,7 @@ fun HomeScreen(
             Spacer(modifier = Modifier.height(32.dp))
 
             Image(
-                painter = painterResource(id = R.drawable.text_logo),
+                painter = painterResource(id = logoRes),
                 contentDescription = null,
                 modifier = Modifier.size(350.dp)
             )

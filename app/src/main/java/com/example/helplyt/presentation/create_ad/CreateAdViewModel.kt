@@ -19,22 +19,33 @@ class CreateAdViewModel : ViewModel() {
         description: String,
         price: String,
         date: String,
-        imageUri: Uri?,
-        context: Context
+        imageUris: List<Uri>,
+        context: Context,
+        location: String = "" // tymczasowo puste
     ) {
-        if (imageUri != null) {
+        if (imageUris.isEmpty()) {
+            saveAdToFirestore(title, description, price, date, emptyList())
+            return
+        }
+
+        val imageUrls = mutableListOf<String>()
+        var uploadedCount = 0
+
+        imageUris.forEach { uri ->
             val imageRef = storage.child("ads_images/${UUID.randomUUID()}")
-            imageRef.putFile(imageUri)
+            imageRef.putFile(uri)
                 .addOnSuccessListener {
-                    imageRef.downloadUrl.addOnSuccessListener { uri ->
-                        saveAdToFirestore(title, description, price, date, uri.toString())
+                    imageRef.downloadUrl.addOnSuccessListener { downloadUri ->
+                        imageUrls.add(downloadUri.toString())
+                        uploadedCount++
+                        if (uploadedCount == imageUris.size) {
+                            saveAdToFirestore(title, description, price, date, imageUrls)
+                        }
                     }
                 }
                 .addOnFailureListener {
                     Toast.makeText(context, "Błąd przesyłania zdjęcia", Toast.LENGTH_SHORT).show()
                 }
-        } else {
-            saveAdToFirestore(title, description, price, date, null)
         }
     }
 
@@ -43,14 +54,15 @@ class CreateAdViewModel : ViewModel() {
         description: String,
         price: String,
         date: String,
-        imageUrl: String?
+        imageUrls: List<String>
+
     ) {
         val ad = hashMapOf(
             "title" to title,
             "description" to description,
             "price" to price,
             "executionDate" to date,
-            "imageUrl" to imageUrl,
+            "imageUrls" to imageUrls,
             "userId" to userId,
             "timestamp" to System.currentTimeMillis()
         )
