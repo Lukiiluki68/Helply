@@ -97,7 +97,11 @@ fun LoginScreen(
                 modifier = Modifier.size(18.dp)
             )
             Spacer(modifier = Modifier.width(6.dp))
-            Text("Zapamiętaj mnie", style = MaterialTheme.typography.bodySmall)
+            Text(
+                text = "Zapamiętaj mnie",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onBackground
+            )
         }
 
         Card(

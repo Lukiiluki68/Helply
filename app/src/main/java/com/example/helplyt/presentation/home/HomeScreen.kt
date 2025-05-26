@@ -80,7 +80,7 @@ fun HomeScreen(
                     text = { Text("Profil") },
                     onClick = {
                         showMenu = false
-                        // TODO: Akcja profilu
+                        navController.navigate("profile")
                     }
                 )
                 DropdownMenuItem(

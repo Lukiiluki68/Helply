@@ -4,6 +4,7 @@ import AdvertisementScreen
 import CreateAdScreen
 import LoginScreen
 import LoginViewModel
+import ProfileScreen
 import RegisterScreen
 import androidx.compose.runtime.Composable
 import androidx.navigation.NavHostController
@@ -18,6 +19,8 @@ sealed class Screen(val route: String) {
     object Home : Screen("home")
     object CreateAd : Screen("createAd")
     object Advertisement : Screen("advertisement")
+    object Profile : Screen("profile")
+
 }
 
 @Composable
@@ -56,6 +59,11 @@ fun AppNavigation(
             AdvertisementScreen(
                 navController = navController,
              //   onBack = { navController.popBackStack() }
+            )
+        }
+        composable(Screen.Profile.route) {
+            ProfileScreen(
+                navController = navController,
             )
         }
 
