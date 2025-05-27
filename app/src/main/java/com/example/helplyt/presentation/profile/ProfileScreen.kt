@@ -50,6 +50,7 @@ fun ProfileScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
+            .background(MaterialTheme.colorScheme.background)
             .padding(24.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
@@ -74,54 +75,71 @@ fun ProfileScreen(
                     .size(28.dp)
                     .background(MaterialTheme.colorScheme.primary, CircleShape)
             ) {
-                Icon(imageVector = Icons.Default.Edit, contentDescription = "Zmień zdjęcie", tint = Color.White)
+                Icon(
+                    imageVector = Icons.Default.Edit,
+                    contentDescription = "Zmień zdjęcie",
+                    tint = MaterialTheme.colorScheme.onPrimary
+                )
             }
         }
 
         Spacer(modifier = Modifier.height(16.dp))
-        Text(username, style = MaterialTheme.typography.headlineSmall)
+        Text(username, style = MaterialTheme.typography.headlineSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
         Text(email, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
         Spacer(modifier = Modifier.height(24.dp))
 
-        ProfileOption(icon = Icons.Default.Person, label = "Twoje dane") {
-            showDataDialog = true
-            // TODO: Połączenie z Firebase
-        }
+        ProfileOption(
+            icon = Icons.Default.Person,
+            label = "Twoje dane",
+            onClick = { showDataDialog = true }
+        )
 
-        ProfileOption(icon = Icons.Default.Lock, label = "Hasło") {
-            // TODO: Zmiana hasła
-        }
 
-        ProfileOption(icon = Icons.Default.Home, label = "Adres") {
-            // TODO: Pokaz adres z ogłoszenia
-        }
+        ProfileOption(
+            icon = Icons.Default.Lock,
+            label = "Hasło",
+            onClick = { /* TODO: Zmiana hasła */ }
+        )
 
-        ProfileOption(icon = Icons.Default.ShoppingCart, label = "Metody płatności") {
-            // TODO: Metody płatności
-        }
+        ProfileOption(
+            icon = Icons.Default.Home,
+            label = "Adres",
+            onClick = { /* TODO: Pokaz adres */ }
+        )
 
-        ProfileOption(icon = Icons.Default.Notifications, label = "Powiadomienia") {
-            // TODO: Powiadomienia
-        }
+        ProfileOption(
+            icon = Icons.Default.ShoppingCart,
+            label = "Metody płatności",
+            onClick = { /* TODO: Metody płatności */ }
+        )
+
+        ProfileOption(
+            icon = Icons.Default.Notifications,
+            label = "Powiadomienia",
+            onClick = { /* TODO: Powiadomienia */ }
+        )
 
         ProfileOption(
             icon = Icons.Default.Delete,
             label = "Usuń konto",
             containerColor = Color.Red,
-            textColor = Color.White
-        ) {
-            // TODO: Usuń konto
-        }
+            contentColor = Color.White,
+            onClick = { /* TODO: Usuń konto */ }
+        )
 
-        ProfileOption(icon = Icons.Default.ExitToApp, label = "Wyloguj się") {
-            FirebaseAuth.getInstance().signOut()
-            scope.launch {
-                userPrefs.clearCredentials()
-                navController.navigate("login") {
-                    popUpTo("home") { inclusive = true }
+        ProfileOption(
+            icon = Icons.Default.ExitToApp,
+            label = "Wyloguj się",
+            onClick = {
+                FirebaseAuth.getInstance().signOut()
+                scope.launch {
+                    userPrefs.clearCredentials()
+                    navController.navigate("login") {
+                        popUpTo("home") { inclusive = true }
+                    }
                 }
             }
-        }
+        )
     }
 
     if (showDataDialog) {
@@ -148,23 +166,37 @@ fun ProfileScreen(
 fun ProfileOption(
     icon: ImageVector,
     label: String,
-    containerColor: Color = Color.White,
-    textColor: Color = MaterialTheme.colorScheme.primary,
-    onClick: () -> Unit
+    onClick: () -> Unit,
+    containerColor: Color = MaterialTheme.colorScheme.primary,
+    contentColor: Color = MaterialTheme.colorScheme.onPrimary
 ) {
-    OutlinedButton(
+    Card(
         onClick = onClick,
         modifier = Modifier
             .fillMaxWidth()
-            .height(48.dp)
+            .height(56.dp)
             .padding(vertical = 4.dp),
-        shape = RoundedCornerShape(16.dp),
-        colors = ButtonDefaults.buttonColors(
-            containerColor = containerColor,
-            contentColor = textColor
-        )
+        shape = MaterialTheme.shapes.medium,
+        colors = CardDefaults.cardColors(containerColor = containerColor)
     ) {
-        Icon(icon, contentDescription = label, modifier = Modifier.padding(end = 8.dp))
-        Text(label)
+        Row(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(horizontal = 16.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.Start
+        ) {
+            Icon(
+                imageVector = icon,
+                contentDescription = label,
+                tint = contentColor,
+                modifier = Modifier.padding(end = 12.dp)
+            )
+            Text(
+                text = label,
+                color = contentColor,
+                style = MaterialTheme.typography.bodyLarge
+            )
+        }
     }
 }

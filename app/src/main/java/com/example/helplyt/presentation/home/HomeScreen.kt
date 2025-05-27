@@ -41,12 +41,10 @@ fun HomeScreen(
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background)
     ) {
-        var showMenu by remember { mutableStateOf(false) }
         val context = LocalContext.current
         val scope = rememberCoroutineScope()
         val userPreferences = remember { UserPreferences(context) }
         val fadeIn by animateFloatAsState(targetValue = 1f, animationSpec = tween(1000))
-        val iconButtonSize = 32.dp
         val isDark = isSystemInDarkTheme()
         val logoRes = if (isDark) R.drawable.text_logo_dark else R.drawable.text_logo
 
@@ -57,51 +55,23 @@ fun HomeScreen(
                 .padding(16.dp),
             contentAlignment = Alignment.TopEnd
         ) {
-            var showMenu by remember { mutableStateOf(false) }
+
 
             IconButton(
-                onClick = { showMenu = true },
-                modifier = Modifier.size(iconButtonSize)
-            ) {
-                Icon(
-                    imageVector = Icons.Default.MoreVert,
-                    contentDescription = "Menu",
-                    tint = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier.size(iconButtonSize)
-                )
-            }
+                onClick = {
+                    navController.navigate("profile")
+                },
+                modifier = Modifier
+                    .statusBarsPadding()
+                    .padding(top = 2.dp, end = 2.dp)
+                    .size(40.dp)
 
-            DropdownMenu(
-                expanded = showMenu,
-                onDismissRequest = { showMenu = false },
-                offset = DpOffset(x = (-300).dp, y = 0.dp)
             ) {
-                DropdownMenuItem(
-                    text = { Text("Profil") },
-                    onClick = {
-                        showMenu = false
-                        navController.navigate("profile")
-                    }
-                )
-                DropdownMenuItem(
-                    text = { Text("Ustawienia") },
-                    onClick = {
-                        showMenu = false
-                        // TODO: Akcja ustawień
-                    }
-                )
-                DropdownMenuItem(
-                    text = { Text("Wyloguj się") },
-                    onClick = {
-                        showMenu = false
-                        FirebaseAuth.getInstance().signOut()
-                        scope.launch {
-                            userPreferences.clearCredentials()
-                            navController.navigate("login") {
-                                popUpTo("home") { inclusive = true }
-                            }
-                        }
-                    }
+                Image(
+                    painter = painterResource(id = R.drawable.avatar_placeholder),
+                    contentDescription = "Profil",
+                    modifier = Modifier
+                        .size(40.dp)
                 )
             }
         }
