@@ -1,3 +1,4 @@
+package com.example.helplyt.presentation.profile
 
 import android.net.Uri
 import androidx.lifecycle.ViewModel
@@ -19,5 +20,22 @@ class ProfileViewModel : ViewModel() {
         _avatarUri.value = uri
     }
 
-    // Możesz dodać funkcje edycji danych, wylogowania itp.
+    // ADRES — tymczasowe dane lokalne
+    data class Address(
+        val postalCode: String = "",
+        val city: String = "",
+        val street: String = "",
+        val number: String = ""
+    )
+
+    private val _address = MutableStateFlow(Address())
+    val address: StateFlow<Address> = _address
+
+    fun updateAddress(postalCode: String, city: String, street: String, number: String) {
+        _address.value = Address(postalCode, city, street, number)
+
+        // TODO: Zapisz adres użytkownika do Firebase
+    }
+
+    // TODO: Załaduj dane adresowe z Firebase przy starcie i ustaw _address.value
 }

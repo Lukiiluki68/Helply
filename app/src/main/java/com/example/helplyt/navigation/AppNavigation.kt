@@ -12,6 +12,8 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import com.example.app.presentation.home.HomeScreen
 import com.example.app.presentation.register.RegisterViewModel
+import com.example.helplyt.presentation.profile.ChangeAddressScreen
+import com.example.helplyt.presentation.profile.ChangePasswordScreen
 
 sealed class Screen(val route: String) {
     object Login : Screen("login")
@@ -20,6 +22,8 @@ sealed class Screen(val route: String) {
     object CreateAd : Screen("createAd")
     object Advertisement : Screen("advertisement")
     object Profile : Screen("profile")
+    object ChangePassword : Screen("changePassword")
+    object ChangeAddress : Screen("changeAddress")
 
 }
 
@@ -65,6 +69,12 @@ fun AppNavigation(
             ProfileScreen(
                 navController = navController,
             )
+        }
+        composable(route = Screen.ChangePassword.route) {
+            ChangePasswordScreen(navController = navController)
+        }
+        composable(route = Screen.ChangeAddress.route) {
+            ChangeAddressScreen(navController)
         }
 
     }

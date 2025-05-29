@@ -27,6 +27,7 @@ import com.google.firebase.auth.FirebaseAuth
 import kotlinx.coroutines.launch
 import com.example.app.data.UserPreferences
 import androidx.navigation.NavController
+import com.example.helplyt.presentation.profile.ProfileViewModel
 
 @Composable
 fun ProfileScreen(
@@ -46,6 +47,9 @@ fun ProfileScreen(
     ) { uri -> if (uri != null) viewModel.setAvatar(uri) }
 
     var showDataDialog by remember { mutableStateOf(false) }
+    var showPaymentDialog by remember { mutableStateOf(false) }
+    var showNotificationDialog by remember { mutableStateOf(false) }
+    var showDeleteDialog by remember { mutableStateOf(false) }
 
     Column(
         modifier = Modifier
@@ -94,29 +98,33 @@ fun ProfileScreen(
             onClick = { showDataDialog = true }
         )
 
-
         ProfileOption(
             icon = Icons.Default.Lock,
             label = "Hasło",
-            onClick = { /* TODO: Zmiana hasła */ }
+            onClick = {
+                navController.navigate("changePassword")
+            }
         )
+
 
         ProfileOption(
             icon = Icons.Default.Home,
             label = "Adres",
-            onClick = { /* TODO: Pokaz adres */ }
+            onClick = {
+                navController.navigate("changeAddress")
+            }
         )
 
         ProfileOption(
             icon = Icons.Default.ShoppingCart,
             label = "Metody płatności",
-            onClick = { /* TODO: Metody płatności */ }
+            onClick = { showPaymentDialog = true }
         )
 
         ProfileOption(
             icon = Icons.Default.Notifications,
             label = "Powiadomienia",
-            onClick = { /* TODO: Powiadomienia */ }
+            onClick = { showNotificationDialog = true }
         )
 
         ProfileOption(
@@ -124,7 +132,7 @@ fun ProfileScreen(
             label = "Usuń konto",
             containerColor = Color.Red,
             contentColor = Color.White,
-            onClick = { /* TODO: Usuń konto */ }
+            onClick = { showDeleteDialog = true }
         )
 
         ProfileOption(
@@ -158,6 +166,46 @@ fun ProfileScreen(
                     Text("Email: $email")
                 }
             }
+        )
+    }
+
+
+    if (showPaymentDialog) {
+        AlertDialog(
+            onDismissRequest = { showPaymentDialog = false },
+            confirmButton = {
+                TextButton(onClick = { showPaymentDialog = false }) {
+                    Text("Zamknij")
+                }
+            },
+            title = { Text("Metody płatności") },
+            text = { Text("Opcja rozwoju aplikacji w system płatności") }
+        )
+    }
+
+    if (showNotificationDialog) {
+        AlertDialog(
+            onDismissRequest = { showNotificationDialog = false },
+            confirmButton = {
+                TextButton(onClick = { showNotificationDialog = false }) {
+                    Text("Zamknij")
+                }
+            },
+            title = { Text("Powiadomienia") },
+            text = { Text("Tutaj będzie można zarządzać powiadomieniami – TODO") }
+        )
+    }
+
+    if (showDeleteDialog) {
+        AlertDialog(
+            onDismissRequest = { showDeleteDialog = false },
+            confirmButton = {
+                TextButton(onClick = { showDeleteDialog = false }) {
+                    Text("Anuluj")
+                }
+            },
+            title = { Text("Usuń konto") },
+            text = { Text("Tu dodamy potwierdzenie i logikę usunięcia konta – TODO") }
         )
     }
 }
