@@ -31,16 +31,17 @@ import com.example.helplyt.presentation.profile.ProfileViewModel
 
 @Composable
 fun ProfileScreen(
-    viewModel: ProfileViewModel = viewModel(),
-    navController: NavController
+    navController: NavController,
+    viewModel: ProfileViewModel
 ) {
+    LaunchedEffect(Unit) {
+        viewModel.loadUserProfile()
+    }
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     val userPrefs = remember { UserPreferences(context) }
 
-    val avatarUri by viewModel.avatarUri.collectAsState()
-    val username by viewModel.username.collectAsState()
-    val email by viewModel.email.collectAsState()
+    val profile by viewModel.profile.collectAsState()
 
     val galleryLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
@@ -58,12 +59,12 @@ fun ProfileScreen(
             .padding(24.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Spacer(modifier = Modifier.height(24.dp))
+        Spacer(modifier = Modifier.height(34.dp))
 
         Box(contentAlignment = Alignment.BottomEnd) {
             Image(
-                painter = if (avatarUri != null)
-                    rememberAsyncImagePainter(avatarUri)
+                painter = if (profile.avatarUrl != null)
+                    rememberAsyncImagePainter(profile.avatarUrl)
                 else painterResource(id = R.drawable.avatar_placeholder),
                 contentDescription = null,
                 modifier = Modifier
@@ -87,10 +88,7 @@ fun ProfileScreen(
             }
         }
 
-        Spacer(modifier = Modifier.height(16.dp))
-        Text(username, style = MaterialTheme.typography.headlineSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-        Text(email, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
-        Spacer(modifier = Modifier.height(24.dp))
+        Spacer(modifier = Modifier.height(34.dp))
 
         ProfileOption(
             icon = Icons.Default.Person,
@@ -161,14 +159,13 @@ fun ProfileScreen(
             title = { Text("Twoje dane") },
             text = {
                 Column {
-                    Text("Imię: Jan")
-                    Text("Nazwisko: Kowalski")
-                    Text("Email: $email")
+                    Text("Imię i nazwisko: ${profile.username}")
+                    Text("Email: ${profile.email}")
+                    Text("Data urodzenia: ${profile.birthDate}")
                 }
             }
         )
     }
-
 
     if (showPaymentDialog) {
         AlertDialog(

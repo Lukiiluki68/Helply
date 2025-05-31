@@ -1,30 +1,36 @@
 package com.example.helplyt.presentation.profile
 
+import android.widget.Toast
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.Visibility
+import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
-import androidx.compose.material.icons.filled.Visibility
-import androidx.compose.material.icons.filled.VisibilityOff
-
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ChangePasswordScreen(navController: NavController) {
+fun ChangePasswordScreen(
+    navController: NavController,
+    viewModel: ProfileViewModel
+) {
+    val context = LocalContext.current
+
     var currentPassword by remember { mutableStateOf("") }
     var newPassword by remember { mutableStateOf("") }
     var repeatPassword by remember { mutableStateOf("") }
 
     var currentVisible by remember { mutableStateOf(false) }
-    var passwordVisible by remember { mutableStateOf(false) }
+    var newVisible by remember { mutableStateOf(false) }
     var repeatVisible by remember { mutableStateOf(false) }
 
     Scaffold(
@@ -47,8 +53,7 @@ fun ChangePasswordScreen(navController: NavController) {
             verticalArrangement = Arrangement.Top,
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Spacer(modifier = Modifier.height(16.dp))
-
+            // Pole: Aktualne hasło
             OutlinedTextField(
                 value = currentPassword,
                 onValueChange = { currentPassword = it },
@@ -56,25 +61,30 @@ fun ChangePasswordScreen(navController: NavController) {
                 modifier = Modifier.fillMaxWidth(),
                 visualTransformation = if (currentVisible) VisualTransformation.None else PasswordVisualTransformation(),
                 trailingIcon = {
-                    val image = if (currentVisible) Icons.Filled.VisibilityOff else Icons.Filled.Visibility
                     IconButton(onClick = { currentVisible = !currentVisible }) {
-                        Icon(imageVector = image, contentDescription = null)
+                        Icon(
+                            imageVector = if (currentVisible) Icons.Filled.VisibilityOff else Icons.Filled.Visibility,
+                            contentDescription = null
+                        )
                     }
                 }
             )
 
             Spacer(modifier = Modifier.height(16.dp))
 
+            // Pole: Nowe hasło
             OutlinedTextField(
                 value = newPassword,
                 onValueChange = { newPassword = it },
                 label = { Text("Nowe hasło") },
                 modifier = Modifier.fillMaxWidth(),
-                visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
+                visualTransformation = if (newVisible) VisualTransformation.None else PasswordVisualTransformation(),
                 trailingIcon = {
-                    val image = if (passwordVisible) Icons.Filled.VisibilityOff else Icons.Filled.Visibility
-                    IconButton(onClick = { passwordVisible = !passwordVisible }) {
-                        Icon(imageVector = image, contentDescription = null)
+                    IconButton(onClick = { newVisible = !newVisible }) {
+                        Icon(
+                            imageVector = if (newVisible) Icons.Filled.VisibilityOff else Icons.Filled.Visibility,
+                            contentDescription = null
+                        )
                     }
                 }
             )
@@ -89,16 +99,19 @@ fun ChangePasswordScreen(navController: NavController) {
 
             Spacer(modifier = Modifier.height(16.dp))
 
+            // Pole: Powtórz nowe hasło
             OutlinedTextField(
                 value = repeatPassword,
                 onValueChange = { repeatPassword = it },
-                label = { Text("Powtórz hasło") },
+                label = { Text("Powtórz nowe hasło") },
                 modifier = Modifier.fillMaxWidth(),
                 visualTransformation = if (repeatVisible) VisualTransformation.None else PasswordVisualTransformation(),
                 trailingIcon = {
-                    val image = if (repeatVisible) Icons.Filled.VisibilityOff else Icons.Filled.Visibility
                     IconButton(onClick = { repeatVisible = !repeatVisible }) {
-                        Icon(imageVector = image, contentDescription = null)
+                        Icon(
+                            imageVector = if (repeatVisible) Icons.Filled.VisibilityOff else Icons.Filled.Visibility,
+                            contentDescription = null
+                        )
                     }
                 }
             )
@@ -107,16 +120,33 @@ fun ChangePasswordScreen(navController: NavController) {
 
             Button(
                 onClick = {
-                    // TODO: Integracja z Firebase do zmiany hasła
+                    when {
+                        currentPassword.isBlank() -> {
+                            Toast.makeText(context, "Podaj aktualne hasło", Toast.LENGTH_SHORT).show()
+                        }
+                        newPassword != repeatPassword -> {
+                            Toast.makeText(context, "Nowe hasła nie są zgodne", Toast.LENGTH_SHORT).show()
+                        }
+                        newPassword.length < 8 -> {
+                            Toast.makeText(context, "Nowe hasło jest zbyt krótkie", Toast.LENGTH_SHORT).show()
+                        }
+                        else -> {
+                            // Próba zmiany hasła
+                            viewModel.changePassword(currentPassword, newPassword) { success, error ->
+                                if (success) {
+                                    Toast.makeText(context, "Hasło zostało zmienione", Toast.LENGTH_SHORT).show()
+                                    navController.popBackStack()
+                                } else {
+                                    Toast.makeText(context, "Błąd: $error", Toast.LENGTH_LONG).show()
+                                }
+                            }
+                        }
+                    }
                 },
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(50.dp),
-                shape = RoundedCornerShape(12.dp),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = MaterialTheme.colorScheme.primary,
-                    contentColor = MaterialTheme.colorScheme.onPrimary
-                )
+                shape = RoundedCornerShape(12.dp)
             ) {
                 Text("Zmień hasło")
             }

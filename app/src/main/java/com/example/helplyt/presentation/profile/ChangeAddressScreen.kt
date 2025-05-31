@@ -15,9 +15,9 @@ import androidx.navigation.NavController
 @Composable
 fun ChangeAddressScreen(
     navController: NavController,
-    viewModel: ProfileViewModel = viewModel()
+    viewModel: ProfileViewModel
 ) {
-    val currentAddress by viewModel.address.collectAsState()
+    val currentAddress by viewModel.profile.collectAsState()
 
     var postalCode by remember { mutableStateOf(currentAddress.postalCode) }
     var city by remember { mutableStateOf(currentAddress.city) }
@@ -85,7 +85,6 @@ fun ChangeAddressScreen(
 
             Button(
                 onClick = {
-                    // Aktualizacja lokalna ViewModelu
                     viewModel.updateAddress(
                         postalCode = postalCode,
                         city = city,
@@ -96,7 +95,7 @@ fun ChangeAddressScreen(
                     // TODO: Zapisz dane adresowe do Firebase (np. Firestore)
                     // Można to zrobić wewnątrz viewModel.updateAddress lub osobną metodą
 
-                    navController.popBackStack() // Wracamy do profilu
+                    navController.popBackStack()
                 },
                 modifier = Modifier
                     .fillMaxWidth()
