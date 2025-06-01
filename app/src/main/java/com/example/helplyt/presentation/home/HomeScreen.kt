@@ -7,6 +7,7 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.List
@@ -17,21 +18,23 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
-import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
+import coil.compose.rememberAsyncImagePainter
 import com.example.app.data.UserPreferences
 import com.example.helplyt.R
+import com.example.helplyt.presentation.profile.ProfileViewModel
 import com.google.firebase.auth.FirebaseAuth
 import kotlinx.coroutines.launch
 
 @Composable
 fun HomeScreen(
     navController: NavController,
+    profileViewModel: ProfileViewModel,
     onCreateAdClick: () -> Unit = {},
     onBrowseAdsClick: () -> Unit = {},
     onSettingsClick: () -> Unit = {}
@@ -47,6 +50,7 @@ fun HomeScreen(
         val fadeIn by animateFloatAsState(targetValue = 1f, animationSpec = tween(1000))
         val isDark = isSystemInDarkTheme()
         val logoRes = if (isDark) R.drawable.text_logo_dark else R.drawable.text_logo
+        val profile by profileViewModel.profile.collectAsState()
 
 
         Box(
@@ -64,19 +68,22 @@ fun HomeScreen(
                 modifier = Modifier
                     .statusBarsPadding()
                     .padding(top = 2.dp, end = 2.dp)
-                    .size(40.dp)
+                    .size(45.dp)
 
             ) {
                 Image(
-                    painter = painterResource(id = R.drawable.avatar_placeholder),
+                    painter = if (profile.avatarUrl != null)
+                        rememberAsyncImagePainter(profile.avatarUrl)
+                    else painterResource(id = R.drawable.avatar_placeholder),
                     contentDescription = "Profil",
                     modifier = Modifier
-                        .size(40.dp)
+                        .size(45.dp)
+                        .clip(CircleShape),
+                    contentScale = ContentScale.Crop
                 )
+
             }
         }
-
-
         Column(
             modifier = Modifier
                 .fillMaxSize()

@@ -54,9 +54,11 @@ fun AppNavigation(
         }
         composable(Screen.Home.route) {
             HomeScreen(
-                navController = navController
+                navController = navController,
+                profileViewModel = profileViewModel
             )
         }
+
         composable(Screen.CreateAd.route) {
             CreateAdScreen(
                 navController = navController,

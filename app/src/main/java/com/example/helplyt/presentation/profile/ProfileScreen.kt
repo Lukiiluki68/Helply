@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -29,6 +30,7 @@ import com.example.app.data.UserPreferences
 import androidx.navigation.NavController
 import com.example.helplyt.presentation.profile.ProfileViewModel
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ProfileScreen(
     navController: NavController,
@@ -52,161 +54,175 @@ fun ProfileScreen(
     var showNotificationDialog by remember { mutableStateOf(false) }
     var showDeleteDialog by remember { mutableStateOf(false) }
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(MaterialTheme.colorScheme.background)
-            .padding(24.dp),
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        Spacer(modifier = Modifier.height(34.dp))
-
-        Box(contentAlignment = Alignment.BottomEnd) {
-            Image(
-                painter = if (profile.avatarUrl != null)
-                    rememberAsyncImagePainter(profile.avatarUrl)
-                else painterResource(id = R.drawable.avatar_placeholder),
-                contentDescription = null,
-                modifier = Modifier
-                    .size(120.dp)
-                    .clip(CircleShape),
-                contentScale = ContentScale.Crop
-            )
-
-            IconButton(
-                onClick = { galleryLauncher.launch("image/*") },
-                modifier = Modifier
-                    .offset(x = (-4).dp, y = (-4).dp)
-                    .size(28.dp)
-                    .background(MaterialTheme.colorScheme.primary, CircleShape)
-            ) {
-                Icon(
-                    imageVector = Icons.Default.Edit,
-                    contentDescription = "Zmień zdjęcie",
-                    tint = MaterialTheme.colorScheme.onPrimary
-                )
-            }
-        }
-
-        Spacer(modifier = Modifier.height(34.dp))
-
-        ProfileOption(
-            icon = Icons.Default.Person,
-            label = "Twoje dane",
-            onClick = { showDataDialog = true }
-        )
-
-        ProfileOption(
-            icon = Icons.Default.Lock,
-            label = "Hasło",
-            onClick = {
-                navController.navigate("changePassword")
-            }
-        )
-
-
-        ProfileOption(
-            icon = Icons.Default.Home,
-            label = "Adres",
-            onClick = {
-                navController.navigate("changeAddress")
-            }
-        )
-
-        ProfileOption(
-            icon = Icons.Default.ShoppingCart,
-            label = "Metody płatności",
-            onClick = { showPaymentDialog = true }
-        )
-
-        ProfileOption(
-            icon = Icons.Default.Notifications,
-            label = "Powiadomienia",
-            onClick = { showNotificationDialog = true }
-        )
-
-        ProfileOption(
-            icon = Icons.Default.Delete,
-            label = "Usuń konto",
-            containerColor = Color.Red,
-            contentColor = Color.White,
-            onClick = { showDeleteDialog = true }
-        )
-
-        ProfileOption(
-            icon = Icons.Default.ExitToApp,
-            label = "Wyloguj się",
-            onClick = {
-                FirebaseAuth.getInstance().signOut()
-                scope.launch {
-                    userPrefs.clearCredentials()
-                    navController.navigate("login") {
-                        popUpTo("home") { inclusive = true }
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = { Text("Profil") },
+                navigationIcon = {
+                    IconButton(onClick = { navController.popBackStack() }) {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = "Wróć"
+                        )
                     }
                 }
+            )
+        }
+    ) { innerPadding ->
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(MaterialTheme.colorScheme.background)
+                .padding(innerPadding)
+                .padding(14.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Box(contentAlignment = Alignment.BottomEnd) {
+                Image(
+                    painter = if (profile.avatarUrl != null)
+                        rememberAsyncImagePainter(profile.avatarUrl)
+                    else painterResource(id = R.drawable.avatar_placeholder),
+                    contentDescription = null,
+                    modifier = Modifier
+                        .size(120.dp)
+                        .clip(CircleShape),
+                    contentScale = ContentScale.Crop
+                )
+
+                IconButton(
+                    onClick = { galleryLauncher.launch("image/*") },
+                    modifier = Modifier
+                        .offset(x = (-4).dp, y = (-4).dp)
+                        .size(28.dp)
+                        .background(MaterialTheme.colorScheme.primary, CircleShape)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Edit,
+                        contentDescription = "Zmień zdjęcie",
+                        tint = MaterialTheme.colorScheme.onPrimary
+                    )
+                }
             }
-        )
-    }
 
-    if (showDataDialog) {
-        AlertDialog(
-            onDismissRequest = { showDataDialog = false },
-            confirmButton = {
-                TextButton(onClick = { showDataDialog = false }) {
-                    Text("Zamknij")
-                }
-            },
-            title = { Text("Twoje dane") },
-            text = {
-                Column {
-                    Text("Imię i nazwisko: ${profile.username}")
-                    Text("Email: ${profile.email}")
-                    Text("Data urodzenia: ${profile.birthDate}")
-                }
-            }
-        )
-    }
+            Spacer(modifier = Modifier.height(34.dp))
 
-    if (showPaymentDialog) {
-        AlertDialog(
-            onDismissRequest = { showPaymentDialog = false },
-            confirmButton = {
-                TextButton(onClick = { showPaymentDialog = false }) {
-                    Text("Zamknij")
-                }
-            },
-            title = { Text("Metody płatności") },
-            text = { Text("Opcja rozwoju aplikacji w system płatności") }
-        )
-    }
+            ProfileOption(
+                icon = Icons.Default.Person,
+                label = "Twoje dane",
+                onClick = { showDataDialog = true }
+            )
 
-    if (showNotificationDialog) {
-        AlertDialog(
-            onDismissRequest = { showNotificationDialog = false },
-            confirmButton = {
-                TextButton(onClick = { showNotificationDialog = false }) {
-                    Text("Zamknij")
+            ProfileOption(
+                icon = Icons.Default.Lock,
+                label = "Hasło",
+                onClick = {
+                    navController.navigate("changePassword")
                 }
-            },
-            title = { Text("Powiadomienia") },
-            text = { Text("Tutaj będzie można zarządzać powiadomieniami – TODO") }
-        )
-    }
+            )
 
-    if (showDeleteDialog) {
-        AlertDialog(
-            onDismissRequest = { showDeleteDialog = false },
-            confirmButton = {
-                TextButton(onClick = { showDeleteDialog = false }) {
-                    Text("Anuluj")
+
+            ProfileOption(
+                icon = Icons.Default.Home,
+                label = "Adres",
+                onClick = {
+                    navController.navigate("changeAddress")
                 }
-            },
-            title = { Text("Usuń konto") },
-            text = { Text("Tu dodamy potwierdzenie i logikę usunięcia konta – TODO") }
-        )
+            )
+
+            ProfileOption(
+                icon = Icons.Default.ShoppingCart,
+                label = "Metody płatności",
+                onClick = { showPaymentDialog = true }
+            )
+
+            ProfileOption(
+                icon = Icons.Default.Notifications,
+                label = "Powiadomienia",
+                onClick = { showNotificationDialog = true }
+            )
+
+            ProfileOption(
+                icon = Icons.Default.Delete,
+                label = "Usuń konto",
+                containerColor = Color.Red,
+                contentColor = Color.White,
+                onClick = { showDeleteDialog = true }
+            )
+
+            ProfileOption(
+                icon = Icons.Default.ExitToApp,
+                label = "Wyloguj się",
+                onClick = {
+                    FirebaseAuth.getInstance().signOut()
+                    scope.launch {
+                        userPrefs.clearCredentials()
+                        navController.navigate("login") {
+                            popUpTo("home") { inclusive = true }
+                        }
+                    }
+                }
+            )
+        }
+
+        if (showDataDialog) {
+            AlertDialog(
+                onDismissRequest = { showDataDialog = false },
+                confirmButton = {
+                    TextButton(onClick = { showDataDialog = false }) {
+                        Text("Zamknij")
+                    }
+                },
+                title = { Text("Twoje dane") },
+                text = {
+                    Column {
+                        Text("Imię i nazwisko: ${profile.username}")
+                        Text("Email: ${profile.email}")
+                        Text("Data urodzenia: ${profile.birthDate}")
+                    }
+                }
+            )
+        }
+
+        if (showPaymentDialog) {
+            AlertDialog(
+                onDismissRequest = { showPaymentDialog = false },
+                confirmButton = {
+                    TextButton(onClick = { showPaymentDialog = false }) {
+                        Text("Zamknij")
+                    }
+                },
+                title = { Text("Metody płatności") },
+                text = { Text("Opcja rozwoju aplikacji w system płatności") }
+            )
+        }
+
+        if (showNotificationDialog) {
+            AlertDialog(
+                onDismissRequest = { showNotificationDialog = false },
+                confirmButton = {
+                    TextButton(onClick = { showNotificationDialog = false }) {
+                        Text("Zamknij")
+                    }
+                },
+                title = { Text("Powiadomienia") },
+                text = { Text("Tutaj będzie można zarządzać powiadomieniami – TODO") }
+            )
+        }
+
+        if (showDeleteDialog) {
+            AlertDialog(
+                onDismissRequest = { showDeleteDialog = false },
+                confirmButton = {
+                    TextButton(onClick = { showDeleteDialog = false }) {
+                        Text("Anuluj")
+                    }
+                },
+                title = { Text("Usuń konto") },
+                text = { Text("Tu dodamy potwierdzenie i logikę usunięcia konta – TODO") }
+            )
+        }
     }
 }
-
 @Composable
 fun ProfileOption(
     icon: ImageVector,
