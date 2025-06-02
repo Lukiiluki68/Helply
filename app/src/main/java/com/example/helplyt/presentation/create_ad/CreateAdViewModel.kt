@@ -3,6 +3,7 @@ import android.net.Uri
 import android.util.Log
 import android.widget.Toast
 import androidx.lifecycle.ViewModel
+import com.example.helplyt.domain.model.UserProfile
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.storage.FirebaseStorage
@@ -21,10 +22,10 @@ class CreateAdViewModel : ViewModel() {
         date: String,
         imageUris: List<Uri>,
         context: Context,
-        location: String = "" // tymczasowo puste
+        location: String
     ) {
         if (imageUris.isEmpty()) {
-            saveAdToFirestore(title, description, price, date, emptyList())
+            saveAdToFirestore(title, description, price, date, emptyList(), location)
             return
         }
 
@@ -39,7 +40,7 @@ class CreateAdViewModel : ViewModel() {
                         imageUrls.add(downloadUri.toString())
                         uploadedCount++
                         if (uploadedCount == imageUris.size) {
-                            saveAdToFirestore(title, description, price, date, imageUrls)
+                            saveAdToFirestore(title, description, price, date, imageUrls, location)
                         }
                     }
                 }
@@ -54,8 +55,8 @@ class CreateAdViewModel : ViewModel() {
         description: String,
         price: String,
         date: String,
-        imageUrls: List<String>
-
+        imageUrls: List<String>,
+        location: String
     ) {
         val ad = hashMapOf(
             "title" to title,
@@ -64,6 +65,7 @@ class CreateAdViewModel : ViewModel() {
             "executionDate" to date,
             "imageUrls" to imageUrls,
             "userId" to userId,
+            "location" to location,
             "timestamp" to System.currentTimeMillis()
         )
 
@@ -75,5 +77,21 @@ class CreateAdViewModel : ViewModel() {
             .addOnFailureListener {
                 Log.e("CreateAd", "Błąd zapisu ogłoszenia", it)
             }
+    }
+
+    fun loadUserAddress(onResult: (UserProfile) -> Unit) {
+        userId?.let { uid ->
+            db.collection("users").document(uid)
+                .get()
+                .addOnSuccessListener { document ->
+                    val profile = document.toObject(UserProfile::class.java)
+                    if (profile != null) {
+                        onResult(profile)
+                    }
+                }
+                .addOnFailureListener {
+                    Log.e("CreateAd", "Błąd pobierania profilu użytkownika", it)
+                }
+        }
     }
 }
