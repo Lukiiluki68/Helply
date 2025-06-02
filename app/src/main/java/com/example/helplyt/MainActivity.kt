@@ -1,6 +1,10 @@
 package com.example.helplyt
 
+import ChangePasswordUseCase
+import GetUserProfileUseCase
 import LoginViewModel
+import SaveUserProfileUseCase
+import UploadAvatarUseCase
 import android.os.Bundle
 import android.util.Log
 import androidx.activity.ComponentActivity
@@ -10,11 +14,13 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.remember
 import androidx.navigation.compose.rememberNavController
 import com.example.app.data.repository.AuthRepository
+import com.example.app.data.repository.UserRepositoryImpl
 import com.example.app.domain.repository.AuthRepositoryImpl
 import com.example.app.domain.use_case.LoginUseCase
 import com.example.app.domain.use_case.RegisterUseCase
 import com.example.app.navigation.AppNavigation
 import com.example.app.presentation.register.RegisterViewModel
+import com.example.helplyt.presentation.profile.ProfileViewModel
 import com.google.firebase.FirebaseApp
 import com.google.firebase.auth.FirebaseAuth
 
@@ -34,12 +40,23 @@ class MainActivity : ComponentActivity() {
 
                     val loginViewModel = remember { LoginViewModel(LoginUseCase(authRepository)) }
                     val registerViewModel = remember { RegisterViewModel(RegisterUseCase(authRepository)) }
+                    val userRepository = UserRepositoryImpl()
+
+                    val profileViewModel = remember {
+                        ProfileViewModel(
+                            getUserProfile = GetUserProfileUseCase(userRepository),
+                            saveUserProfileUseCase = SaveUserProfileUseCase(userRepository),
+                            uploadAvatar = UploadAvatarUseCase(userRepository),
+                            changePassword = ChangePasswordUseCase(userRepository)
+                        )
+                    }
 
                     val navController = rememberNavController()
                     AppNavigation(
                         navController = navController,
                         loginViewModel = loginViewModel,
-                        registerViewModel = registerViewModel
+                        registerViewModel = registerViewModel,
+                        profileViewModel = profileViewModel
                     )
                 }
             }
