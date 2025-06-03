@@ -12,7 +12,28 @@
           "package_name": "com.example.helplyt"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "527916194511-2pen09iqbp8307duorca27acde5v9aad.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.helplyt",
+            "certificate_hash": "2c2029814f60fd0f65e5ebe5ffe5076873972b46"
+          }
+        },
+        {
+          "client_id": "527916194511-ruhgbltsmm9tonea5c5qpvp4bs0kf6c1.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.helplyt",
+            "certificate_hash": "1b80727e77081c3b5a76edb867febb7fb1f0a230"
+          }
+        },
+        {
+          "client_id": "527916194511-nttmhsb4dle0ctsbfh9j885vvq1sh38a.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
           "current_key": "AIzaSyBTuKmb1NiFQkblCgMWqtBa9PaqehCQEdI"
@@ -20,7 +41,12 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "527916194511-nttmhsb4dle0ctsbfh9j885vvq1sh38a.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
         }
       }
     }

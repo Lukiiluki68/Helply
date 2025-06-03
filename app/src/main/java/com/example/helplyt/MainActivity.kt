@@ -36,11 +36,17 @@ class MainActivity : ComponentActivity() {
                     dynamicColor = false // bardzo ważne!
                 ) {
                     val auth = FirebaseAuth.getInstance()
-                    val authRepository: AuthRepository = AuthRepositoryImpl(auth)
+                    val authRepository = AuthRepositoryImpl(auth)
+                    val userRepository = UserRepositoryImpl()  // <-- najpierw zainicjalizuj userRepository
 
-                    val loginViewModel = remember { LoginViewModel(LoginUseCase(authRepository)) }
+                    val loginViewModel = remember {
+                        LoginViewModel(
+                            loginUseCase = LoginUseCase(authRepository),
+                            userRepository = userRepository       // <-- potem użyj go tutaj
+                        )
+                    }
+
                     val registerViewModel = remember { RegisterViewModel(RegisterUseCase(authRepository)) }
-                    val userRepository = UserRepositoryImpl()
 
                     val profileViewModel = remember {
                         ProfileViewModel(
@@ -56,7 +62,7 @@ class MainActivity : ComponentActivity() {
                         navController = navController,
                         loginViewModel = loginViewModel,
                         registerViewModel = registerViewModel,
-                        profileViewModel = profileViewModel
+                        profileViewModel = profileViewModel,
                     )
                 }
             }

@@ -1,4 +1,7 @@
+import android.app.Activity
 import android.widget.Toast
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -10,28 +13,56 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import com.example.app.data.UserPreferences
 import com.example.app.utils.ValidationUtils.isEmailValid
-import kotlinx.coroutines.launch
-import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.tooling.preview.Preview
 import com.example.helplyt.R
+import com.google.android.gms.auth.api.signin.GoogleSignIn
+import com.google.android.gms.auth.api.signin.GoogleSignInOptions
+import com.google.android.gms.common.api.ApiException
+import kotlinx.coroutines.launch
+import androidx.navigation.NavHostController
+import com.example.app.navigation.Screen
 
 @Composable
 fun LoginScreen(
     viewModel: LoginViewModel,
+    navController: NavHostController,
     onLoginSuccess: () -> Unit,
     onNavigateToRegister: () -> Unit
 ) {
     val context = LocalContext.current
+    val activity = context as Activity
     val coroutineScope = rememberCoroutineScope()
     val userPrefs = remember { UserPreferences(context) }
 
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var rememberMe by remember { mutableStateOf(false) }
+
+    // Google SignIn setup
+    val gso = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
+        .requestIdToken(context.getString(R.string.default_web_client_id))
+        .requestEmail()
+        .build()
+    val googleSignInClient = GoogleSignIn.getClient(context, gso)
+
+    val launcher = rememberLauncherForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+        val task = GoogleSignIn.getSignedInAccountFromIntent(result.data)
+        try {
+            val account = task.getResult(ApiException::class.java)
+            val idToken = account.idToken
+            if (idToken != null) {
+                viewModel.loginWithGoogle(idToken)
+            } else {
+                Toast.makeText(context, "Token logowania Google jest null", Toast.LENGTH_LONG).show()
+            }
+        } catch (e: ApiException) {
+            Toast.makeText(context, "Google logowanie nieudane: ${e.localizedMessage}", Toast.LENGTH_LONG).show()
+        }
+    }
 
     LaunchedEffect(Unit) {
         val (savedEmail, savedPassword, savedRememberMe) = userPrefs.loadCredentials()
@@ -42,7 +73,38 @@ fun LoginScreen(
         }
     }
 
-    val loginResult = viewModel.loginState
+    // Obserwuj stany z ViewModel
+    val loginResult by remember { derivedStateOf { viewModel.loginState } }
+    val needsSetup by remember { derivedStateOf { viewModel.needsProfileSetup } }
+
+    // Reaguj na zmiany loginResult i needsSetup, wykonaj nawigację i reset stanu
+    LaunchedEffect(loginResult, needsSetup) {
+        val result = loginResult // przypisz do lokalnej zmiennej
+
+        if (result != null) {
+            if (result.isSuccess) {
+                Toast.makeText(context, "Zalogowano pomyślnie", Toast.LENGTH_LONG).show()
+                if (needsSetup) {
+                    navController.navigate(Screen.SetupProfile.route) {
+                        popUpTo(Screen.Login.route) { inclusive = true }
+                    }
+                } else {
+                    navController.navigate(Screen.Home.route) {
+                        popUpTo(Screen.Login.route) { inclusive = true }
+                    }
+                }
+                viewModel.resetLoginState()
+            } else if (result.isFailure) {
+                Toast.makeText(context, result.exceptionOrNull()?.message ?: "Błąd logowania", Toast.LENGTH_LONG).show()
+                viewModel.resetLoginState()
+            }
+        }
+    }
+    LaunchedEffect(Unit) {
+        viewModel.checkIfUserLoggedIn()
+    }
+
+
 
     Column(
         modifier = Modifier
@@ -126,14 +188,26 @@ fun LoginScreen(
             colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primary)
         ) {
             Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text(
-                        text = "Zaloguj się",
-                        color = MaterialTheme.colorScheme.onPrimary,
-                        style = MaterialTheme.typography.bodyLarge
-                    )
-                }
+                Text(
+                    text = "Zaloguj się",
+                    color = MaterialTheme.colorScheme.onPrimary,
+                    style = MaterialTheme.typography.bodyLarge
+                )
             }
+        }
+
+        Spacer(modifier = Modifier.height(12.dp))
+
+        Button(
+            onClick = {
+                val signInIntent = googleSignInClient.signInIntent
+                launcher.launch(signInIntent)
+            },
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Icon(imageVector = Icons.Default.Email, contentDescription = null)
+            Spacer(modifier = Modifier.width(8.dp))
+            Text("Zaloguj się przez Google")
         }
 
         Spacer(modifier = Modifier.height(24.dp))
@@ -143,16 +217,6 @@ fun LoginScreen(
             modifier = Modifier.align(Alignment.CenterHorizontally)
         ) {
             Text("Nie masz konta? Zarejestruj się")
-        }
-
-        loginResult?.let {
-            if (it.isSuccess) {
-                Toast.makeText(context, "Zalogowano pomyślnie", Toast.LENGTH_LONG).show()
-                viewModel.resetLoginState()
-                onLoginSuccess()
-            } else {
-                Toast.makeText(context, it.exceptionOrNull()?.message ?: "Błąd logowania", Toast.LENGTH_LONG).show()
-            }
         }
     }
 }

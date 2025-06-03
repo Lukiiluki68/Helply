@@ -1,3 +1,5 @@
 <resources>
     <string name="app_name">HelplyT</string>
+    <string name="default_web_client_id">527916194511-2pen09iqbp8307duorca27acde5v9aad.apps.googleusercontent.com</string>
+
 </resources>
