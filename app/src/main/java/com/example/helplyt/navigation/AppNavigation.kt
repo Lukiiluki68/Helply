@@ -1,6 +1,5 @@
 package com.example.app.navigation
 
-
 import AdvertisementScreen
 import CreateAdScreen
 import LoginScreen
@@ -9,10 +8,13 @@ import ProfileScreen
 import RegisterScreen
 import androidx.compose.runtime.Composable
 import androidx.navigation.NavHostController
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import androidx.navigation.navArgument
 import com.example.app.presentation.home.HomeScreen
 import com.example.app.presentation.register.RegisterViewModel
+import com.example.helplyt.presentation.ad_details.AdDetailsScreen
 import com.example.helplyt.presentation.profile.ChangeAddressScreen
 import com.example.helplyt.presentation.profile.ChangePasswordScreen
 import com.example.helplyt.presentation.profile.ProfileViewModel
@@ -31,6 +33,9 @@ sealed class Screen(val route: String) {
     object Home : Screen("home")
     object CreateAd : Screen("createAd")
     object Advertisement : Screen("advertisement")
+    object AdDetails : Screen("adDetails/{adId}") {
+        fun createRoute(adId: String) = "adDetails/$adId"
+    }
     object Profile : Screen("profile")
     object ChangePassword : Screen("changePassword")
     object ChangeAddress : Screen("changeAddress")
@@ -79,8 +84,7 @@ fun AppNavigation(
         }
         composable(Screen.Advertisement.route) {
             AdvertisementScreen(
-                navController = navController,
-             //   onBack = { navController.popBackStack() }
+                navController = navController
             )
         }
         composable(Screen.Profile.route) {
@@ -114,5 +118,13 @@ fun AppNavigation(
         }
 
 
+        // Dodana trasa do szczegółów ogłoszenia
+        composable(
+            route = Screen.AdDetails.route,
+            arguments = listOf(navArgument("adId") { type = NavType.StringType })
+        ) { backStackEntry ->
+            val adId = backStackEntry.arguments?.getString("adId") ?: return@composable
+            AdDetailsScreen(navController = navController, adId = adId)
+        }
     }
 }
