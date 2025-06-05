@@ -154,6 +154,33 @@ fun HomeScreen(
                         }
                     }
                 }
+                Spacer(modifier = Modifier.height(16.dp))
+
+                Card(
+                    onClick = { navController.navigate("myAdvertisements") },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(56.dp),
+                    shape = MaterialTheme.shapes.medium,
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primary)
+                ) {
+                    Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(
+                                imageVector = Icons.Default.List,
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.onPrimary,
+                                modifier = Modifier.padding(end = 8.dp)
+                            )
+                            Text(
+                                text = "Moje ogłoszenia",
+                                color = MaterialTheme.colorScheme.onPrimary,
+                                style = MaterialTheme.typography.bodyLarge
+                            )
+                        }
+                    }
+                }
+
             }
 
             Spacer(modifier = Modifier.height(400.dp))

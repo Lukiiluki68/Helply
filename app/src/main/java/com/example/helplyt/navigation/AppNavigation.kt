@@ -1,5 +1,6 @@
 package com.example.app.navigation
 
+
 import AdvertisementScreen
 import CreateAdScreen
 import LoginScreen
@@ -16,6 +17,13 @@ import com.example.helplyt.presentation.profile.ChangeAddressScreen
 import com.example.helplyt.presentation.profile.ChangePasswordScreen
 import com.example.helplyt.presentation.profile.ProfileViewModel
 import com.example.helplyt.presentation.profile.SetupProfileScreen
+import com.example.helplyt.presentation.my_advertisement.MyAdvertisementScreen
+
+
+
+
+
+
 
 sealed class Screen(val route: String) {
     object Login : Screen("login")
@@ -27,6 +35,8 @@ sealed class Screen(val route: String) {
     object ChangePassword : Screen("changePassword")
     object ChangeAddress : Screen("changeAddress")
     object SetupProfile : Screen("setupProfile")
+    object MyAdvertisements : Screen("myAdvertisements")
+
 
 }
 
@@ -97,6 +107,12 @@ fun AppNavigation(
                 viewModel = profileViewModel
             )
         }
+        composable(Screen.MyAdvertisements.route) {
+            MyAdvertisementScreen(
+                navController = navController
+            )
+        }
+
 
     }
 }

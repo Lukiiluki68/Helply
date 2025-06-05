@@ -38,13 +38,19 @@ class LoginViewModel(
             try {
                 val credential = GoogleAuthProvider.getCredential(idToken, null)
                 val result = FirebaseAuth.getInstance().signInWithCredential(credential).await()
-                loginState = Result.success(result.user)
-                checkUserProfile()
+                val user = result.user
+                if (user != null) {
+                    checkUserProfile()
+                    loginState = Result.success(user)  // ustaw po checkUserProfile
+                } else {
+                    loginState = Result.failure(Exception("Brak użytkownika po logowaniu Google"))
+                }
             } catch (e: Exception) {
                 loginState = Result.failure(e)
             }
         }
     }
+
     fun checkIfUserLoggedIn() {
         val currentUser = FirebaseAuth.getInstance().currentUser
         if (currentUser != null) {

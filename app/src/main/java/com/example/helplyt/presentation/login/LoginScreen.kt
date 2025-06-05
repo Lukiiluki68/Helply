@@ -22,6 +22,7 @@ import com.example.helplyt.R
 import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions
 import com.google.android.gms.common.api.ApiException
+import com.google.firebase.auth.FirebaseAuth
 import kotlinx.coroutines.launch
 import androidx.navigation.NavHostController
 import com.example.app.navigation.Screen
@@ -64,12 +65,18 @@ fun LoginScreen(
         }
     }
 
+    // Wyloguj Google i Firebase przed sprawdzeniem czy użytkownik jest zalogowany
     LaunchedEffect(Unit) {
+        googleSignInClient.signOut()
+        FirebaseAuth.getInstance().signOut()
+
         val (savedEmail, savedPassword, savedRememberMe) = userPrefs.loadCredentials()
         if (savedRememberMe && savedEmail != null && savedPassword != null) {
             email = savedEmail
             password = savedPassword
             viewModel.login(savedEmail, savedPassword)
+        } else {
+            viewModel.checkIfUserLoggedIn()
         }
     }
 
@@ -100,11 +107,6 @@ fun LoginScreen(
             }
         }
     }
-    LaunchedEffect(Unit) {
-        viewModel.checkIfUserLoggedIn()
-    }
-
-
 
     Column(
         modifier = Modifier
