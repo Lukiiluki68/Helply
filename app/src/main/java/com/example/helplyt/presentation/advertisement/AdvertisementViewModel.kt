@@ -1,5 +1,6 @@
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -43,6 +44,8 @@ class AdvertisementViewModel : ViewModel() {
     val filterState: StateFlow<FilterState> = _filterState
     private var allAds: List<Advertisement> = emptyList()
 
+    private val currentUserId = FirebaseAuth.getInstance().currentUser?.uid
+
     private val _ads = MutableStateFlow<List<Advertisement>>(emptyList())
     val ads: StateFlow<List<Advertisement>> = _ads
 
@@ -66,9 +69,13 @@ class AdvertisementViewModel : ViewModel() {
                 .addSnapshotListener { snapshot, error ->
                     if (error != null || snapshot == null) return@addSnapshotListener
 
+                    val currentUserId = FirebaseAuth.getInstance().currentUser?.uid
                     val adList = snapshot.documents.mapNotNull { doc ->
                         doc.toObject(Advertisement::class.java)?.copy(id = doc.id)
+                    }.filter { ad ->
+                        ad.userId != currentUserId
                     }
+
                     allAds = adList
                     applyFilters()
                 }

@@ -1,5 +1,6 @@
 package com.example.helplyt.presentation.my_advertisement
 
+import Advertisement
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.google.firebase.auth.FirebaseAuth
@@ -8,29 +9,24 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 
-data class Advertisement(
-    val id: String = "",
-    val title: String = "",
-    val description: String = "",
-    val price: String = "",
-    val executionDate: String = "",
-    val imageUrl: String? = null,
-    val userId: String = "",
-    val timestamp: Long = 0
-)
+
 
 class MyAdvertisementViewModel : ViewModel() {
     private val db = FirebaseFirestore.getInstance()
     private val auth = FirebaseAuth.getInstance()
 
-    private val _myAds = MutableStateFlow<List<Advertisement>>(emptyList())
-    val myAds: StateFlow<List<Advertisement>> = _myAds
+    private val _myOwnAds = MutableStateFlow<List<Advertisement>>(emptyList())
+    val myOwnAds: StateFlow<List<Advertisement>> = _myOwnAds
+
+    private val _myApplications = MutableStateFlow<List<Advertisement>>(emptyList())
+    val myApplications: StateFlow<List<Advertisement>> = _myApplications
 
     init {
-        fetchMyAdvertisements()
+        fetchMyOwnAds()
+        fetchMyApplications()
     }
 
-    private fun fetchMyAdvertisements() {
+    private fun fetchMyOwnAds() {
         val currentUserId = auth.currentUser?.uid ?: return
 
         viewModelScope.launch {
@@ -43,7 +39,25 @@ class MyAdvertisementViewModel : ViewModel() {
                     val adList = snapshot.documents.mapNotNull { doc ->
                         doc.toObject(Advertisement::class.java)?.copy(id = doc.id)
                     }
-                    _myAds.value = adList
+                    _myOwnAds.value = adList
+                }
+        }
+    }
+
+    private fun fetchMyApplications() {
+        val currentUserId = auth.currentUser?.uid ?: return
+
+        viewModelScope.launch {
+            db.collection("ads")
+                .whereArrayContains("appliedUserIds", currentUserId)
+                .orderBy("timestamp", com.google.firebase.firestore.Query.Direction.DESCENDING)
+                .addSnapshotListener { snapshot, error ->
+                    if (error != null || snapshot == null) return@addSnapshotListener
+
+                    val adList = snapshot.documents.mapNotNull { doc ->
+                        doc.toObject(Advertisement::class.java)?.copy(id = doc.id)
+                    }
+                    _myApplications.value = adList
                 }
         }
     }
