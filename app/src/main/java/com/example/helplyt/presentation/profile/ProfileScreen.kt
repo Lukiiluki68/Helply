@@ -213,14 +213,40 @@ fun ProfileScreen(
             AlertDialog(
                 onDismissRequest = { showDeleteDialog = false },
                 confirmButton = {
+                    TextButton(onClick = {
+                        viewModel.deleteAccount(
+                            onSuccess = {
+                                scope.launch {
+                                    userPrefs.clearCredentials()
+                                    navController.navigate("login") {
+                                        popUpTo("home") { inclusive = true }
+                                    }
+                                }
+                            },
+                            onFailure = {
+                                // TODO: Możesz pokazać błąd np. snackbarem
+                            }
+                        )
+                        showDeleteDialog = false
+                    }) {
+                        Text("Tak, usuń", color = Color.Red)
+                    }
+                },
+                dismissButton = {
                     TextButton(onClick = { showDeleteDialog = false }) {
                         Text("Anuluj")
                     }
                 },
-                title = { Text("Usuń konto") },
-                text = { Text("Tu dodamy potwierdzenie i logikę usunięcia konta – TODO") }
+                title = { Text("Czy na pewno chcesz usunąć konto?") },
+                text = {
+                    Text(
+                        "Ta operacja jest nieodwracalna.\n" +
+                                "Wszystkie Twoje dane, ogłoszenia i konto zostaną trwale usunięte."
+                    )
+                }
             )
         }
+
     }
 }
 @Composable

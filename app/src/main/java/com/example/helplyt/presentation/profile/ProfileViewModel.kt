@@ -8,6 +8,8 @@ import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.helplyt.domain.model.UserProfile
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
@@ -84,5 +86,20 @@ class ProfileViewModel(
                 _profile.value = profile
             }
         }
+    }
+    fun deleteAccount(onSuccess: () -> Unit, onFailure: (Exception) -> Unit) {
+        val user = FirebaseAuth.getInstance().currentUser
+        val db = FirebaseFirestore.getInstance()
+
+        user?.uid?.let { uid ->
+            db.collection("users").document(uid)
+                .delete()
+                .addOnSuccessListener {
+                    user.delete()
+                        .addOnSuccessListener { onSuccess() }
+                        .addOnFailureListener { onFailure(it) }
+                }
+                .addOnFailureListener { onFailure(it) }
+        } ?: onFailure(Exception("Brak zalogowanego użytkownika"))
     }
 }
