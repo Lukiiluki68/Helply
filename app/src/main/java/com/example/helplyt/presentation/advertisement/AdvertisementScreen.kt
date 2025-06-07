@@ -1,16 +1,6 @@
-
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
@@ -19,26 +9,19 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.Search
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import coil.compose.rememberAsyncImagePainter
 import com.example.app.navigation.Screen
+import com.example.helplyt.R
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -47,6 +30,13 @@ fun AdvertisementScreen(
     viewModel: AdvertisementViewModel = viewModel()
 ) {
     val ads by viewModel.ads.collectAsState()
+    val sortOrder by viewModel.sortOrder.collectAsState()
+    val filterState by viewModel.filterState.collectAsState()
+
+    var expanded by remember { mutableStateOf(false) }
+    var showFilterDialog by remember { mutableStateOf(false) }
+    var sliderPosition by remember { mutableStateOf(0f..1000f) }
+    var onlyWithImage by remember { mutableStateOf(false) }
 
     Scaffold(
         topBar = {
@@ -65,7 +55,6 @@ fun AdvertisementScreen(
                 .padding(innerPadding)
                 .padding(8.dp)
         ) {
-
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -73,21 +62,66 @@ fun AdvertisementScreen(
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 OutlinedButton(
-                    onClick = { /* TODO: obsługa filtrowania */ },
-                    modifier = Modifier.weight(1f)
+                    onClick = { showFilterDialog = true },
+                    modifier = Modifier.weight(1f),
+                    shape = RoundedCornerShape(8.dp)
                 ) {
                     Icon(Icons.Default.Search, contentDescription = "Filtry")
                     Spacer(modifier = Modifier.width(4.dp))
                     Text("Filtry")
                 }
 
-                OutlinedButton(
-                    onClick = { /* TODO: obsługa sortowania */ },
-                    modifier = Modifier.weight(1f)
-                ) {
-                    Icon(Icons.Default.ArrowDropDown, contentDescription = "Sortowanie")
-                    Spacer(modifier = Modifier.width(4.dp))
-                    Text("Sortowanie")
+                Box(modifier = Modifier.weight(1f)) {
+                    OutlinedButton(
+                        onClick = { expanded = true },
+                        shape = RoundedCornerShape(8.dp),
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Icon(Icons.Default.ArrowDropDown, contentDescription = "Sortowanie")
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text(
+                            text = when (sortOrder) {
+                                SortOrder.NEWEST -> "Najnowsze"
+                                SortOrder.OLDEST -> "Najstarsze"
+                                SortOrder.PRICE_ASC -> "Cena ↑"
+                                SortOrder.PRICE_DESC -> "Cena ↓"
+                            }
+                        )
+                    }
+
+                    DropdownMenu(
+                        expanded = expanded,
+                        onDismissRequest = { expanded = false }
+                    ) {
+                        DropdownMenuItem(
+                            text = { Text("Najnowsze") },
+                            onClick = {
+                                viewModel.setSortOrder(SortOrder.NEWEST)
+                                expanded = false
+                            }
+                        )
+                        DropdownMenuItem(
+                            text = { Text("Najstarsze") },
+                            onClick = {
+                                viewModel.setSortOrder(SortOrder.OLDEST)
+                                expanded = false
+                            }
+                        )
+                        DropdownMenuItem(
+                            text = { Text("Cena rosnąco") },
+                            onClick = {
+                                viewModel.setSortOrder(SortOrder.PRICE_ASC)
+                                expanded = false
+                            }
+                        )
+                        DropdownMenuItem(
+                            text = { Text("Cena malejąco") },
+                            onClick = {
+                                viewModel.setSortOrder(SortOrder.PRICE_DESC)
+                                expanded = false
+                            }
+                        )
+                    }
                 }
             }
 
@@ -107,6 +141,58 @@ fun AdvertisementScreen(
             }
         }
     }
+
+    if (showFilterDialog) {
+        AlertDialog(
+            onDismissRequest = { showFilterDialog = false },
+            confirmButton = {
+                TextButton(onClick = {
+                    viewModel.setFilter(
+                        sliderPosition.start.toInt(),
+                        sliderPosition.endInclusive.toInt(),
+                        onlyWithImage
+                    )
+                    showFilterDialog = false
+                }) {
+                    Text("Zastosuj")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showFilterDialog = false }) {
+                    Text("Anuluj")
+                }
+            },
+            title = { Text("Filtruj ogłoszenia") },
+            text = {
+                Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+                    Text("Zakres ceny", style = MaterialTheme.typography.bodyMedium)
+
+                    RangeSlider(
+                        value = sliderPosition,
+                        onValueChange = { sliderPosition = it },
+                        valueRange = 0f..1000f,
+                        steps = 9
+                    )
+
+                    Row(
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Text("Od ${sliderPosition.start.toInt()} zł")
+                        Text("Do ${sliderPosition.endInclusive.toInt()} zł")
+                    }
+
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Checkbox(
+                            checked = onlyWithImage,
+                            onCheckedChange = { onlyWithImage = it }
+                        )
+                        Text("Tylko ze zdjęciem")
+                    }
+                }
+            }
+        )
+    }
 }
 
 @Composable
@@ -114,27 +200,42 @@ fun AdItem(ad: Advertisement, onClick: () -> Unit) {
     Surface(
         modifier = Modifier
             .fillMaxWidth()
-            .height(200.dp)
-            .border(1.dp, Color.Black, RoundedCornerShape(16.dp))
-            .padding(4.dp)
-            .clickable { onClick() },
-        color = Color.White,
-        shape = MaterialTheme.shapes.medium
+            .height(220.dp)
+            .clickable(onClick = onClick),
+        shape = RoundedCornerShape(12.dp),
+        shadowElevation = 6.dp,
+        color = Color.White
     ) {
-        Column(modifier = Modifier.padding(8.dp)) {
-            ad.imageUrl?.let { url ->
-                Image(
-                    painter = rememberAsyncImagePainter(url),
-                    contentDescription = "Zdjęcie ogłoszenia",
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(120.dp),
-                    contentScale = ContentScale.Crop
+        Column {
+            val painter = rememberAsyncImagePainter(
+                model = ad.mainImageUrl,
+                fallback = painterResource(R.drawable.no_image),
+                error = painterResource(R.drawable.no_image),
+                placeholder = painterResource(R.drawable.no_image)
+            )
+
+            Image(
+                painter = painter,
+                contentDescription = "Zdjęcie ogłoszenia",
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(140.dp),
+                contentScale = ContentScale.Crop
+            )
+
+            Column(modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp)) {
+                Text(
+                    text = ad.title,
+                    style = MaterialTheme.typography.titleMedium,
+                    maxLines = 1
                 )
-                Spacer(modifier = Modifier.height(4.dp))
+                Spacer(modifier = Modifier.height(6.dp))
+                Text(
+                    text = "${ad.price} zł",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = Color.Gray
+                )
             }
-            Text(text = ad.title, style = MaterialTheme.typography.titleMedium)
-            Text(text = ad.price, style = MaterialTheme.typography.bodySmall)
         }
     }
 }

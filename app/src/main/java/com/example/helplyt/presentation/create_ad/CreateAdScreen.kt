@@ -20,6 +20,7 @@ import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
@@ -52,6 +53,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
@@ -70,6 +72,7 @@ fun CreateAdScreen(
     var description by remember { mutableStateOf("") }
     var price by remember { mutableStateOf("") }
     var date by remember { mutableStateOf("") }
+    var dateError by remember { mutableStateOf(false) }
     val imageUris = remember { mutableStateListOf<Uri>() }
 
     var showLocationDialog by remember { mutableStateOf(false) }
@@ -78,12 +81,12 @@ fun CreateAdScreen(
     var street by remember { mutableStateOf("") }
     var building by remember { mutableStateOf("") }
     var useDefaultAddress by remember { mutableStateOf(false) }
-
     val calendar = Calendar.getInstance()
     val datePickerDialog = DatePickerDialog(
         context,
         { _, year, month, day ->
             date = "%02d-%02d-%04d".format(day, month + 1, year)
+            dateError = false
         },
         calendar.get(Calendar.YEAR),
         calendar.get(Calendar.MONTH),
@@ -193,27 +196,75 @@ fun CreateAdScreen(
 
             TextField(
                 value = price,
-                onValueChange = { price = it },
+                onValueChange = { input ->
+                    // Filtruj tylko cyfry i ewentualnie przecinek/kropkę
+                    if (input.matches(Regex("^\\d*([.,]\\d{0,2})?$"))) {
+                        price = input
+                    }
+                },
                 label = { Text("Cena") },
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier.fillMaxWidth(),
+                keyboardOptions = KeyboardOptions.Default.copy(keyboardType = KeyboardType.Number)
             )
 
             Spacer(modifier = Modifier.height(12.dp))
 
             TextField(
                 value = date,
-                onValueChange = {},
-                readOnly = true,
-                label = { Text("Data wykonania") },
-                trailingIcon = {
-                    IconButton(onClick = { datePickerDialog.show() }) {
-                        Icon(imageVector = Icons.Default.DateRange, contentDescription = "Kalendarz")
+                onValueChange = { input ->
+                    date = input
+                    dateError = true
+
+                    val parts = input.split("-")
+                    if (parts.size == 3 && parts[0].length == 2 && parts[1].length == 2 && parts[2].length == 4) {
+                        try {
+                            val day = parts[0].toInt()
+                            val month = parts[1].toInt()
+                            val year = parts[2].toInt()
+
+                            val inputCal = Calendar.getInstance().apply {
+                                set(Calendar.YEAR, year)
+                                set(Calendar.MONTH, month - 1)
+                                set(Calendar.DAY_OF_MONTH, day)
+                                set(Calendar.HOUR_OF_DAY, 0)
+                                set(Calendar.MINUTE, 0)
+                                set(Calendar.SECOND, 0)
+                                set(Calendar.MILLISECOND, 0)
+                            }
+
+                            val now = Calendar.getInstance().apply {
+                                set(Calendar.HOUR_OF_DAY, 0)
+                                set(Calendar.MINUTE, 0)
+                                set(Calendar.SECOND, 0)
+                                set(Calendar.MILLISECOND, 0)
+                            }
+
+                            val valid = day == inputCal.get(Calendar.DAY_OF_MONTH) &&
+                                    month - 1 == inputCal.get(Calendar.MONTH) &&
+                                    year == inputCal.get(Calendar.YEAR)
+
+                            dateError = !(valid && !inputCal.before(now))
+                        } catch (e: Exception) {
+                            dateError = true
+                        }
                     }
                 },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clickable { datePickerDialog.show() }
+                label = { Text("Data wykonania") },
+                placeholder = { Text("dd-mm-rrrr") },
+                isError = dateError,
+                supportingText = {
+                    if (dateError) Text("Wpisz poprawną przyszłą datę w formacie dd-mm-rrrr", color = MaterialTheme.colorScheme.error)
+                },
+                trailingIcon = {
+                    IconButton(onClick = { datePickerDialog.show() }) {
+                        Icon(Icons.Default.DateRange, contentDescription = "Kalendarz")
+                    }
+                },
+                singleLine = true,
+                modifier = Modifier.fillMaxWidth(),
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
             )
+
 
             Spacer(modifier = Modifier.height(12.dp))
 
