@@ -42,6 +42,7 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
@@ -58,12 +59,15 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import coil.compose.rememberAsyncImagePainter
+import com.example.helplyt.presentation.advertisement.CreateAdViewModel
+import com.google.firebase.firestore.FirebaseFirestore
 import java.util.Calendar
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CreateAdScreen(
     navController: NavController,
+    adId: String? = null,
     viewModel: CreateAdViewModel = viewModel(),
     onBack: () -> Unit = { navController.popBackStack() }
 ) {
@@ -92,6 +96,40 @@ fun CreateAdScreen(
         calendar.get(Calendar.MONTH),
         calendar.get(Calendar.DAY_OF_MONTH)
     )
+    LaunchedEffect(adId) {
+        if (adId != null) {
+            FirebaseFirestore.getInstance()
+                .collection("ads")
+                .document(adId)
+                .get()
+                .addOnSuccessListener { doc ->
+                    title = doc.getString("title") ?: ""
+                    description = doc.getString("description") ?: ""
+                    price = doc.getString("price") ?: ""
+                    date = doc.getString("executionDate") ?: ""
+                    val urls = doc.get("imageUrls") as? List<String> ?: emptyList()
+                    imageUris.clear()
+                    imageUris.addAll(urls.map { Uri.parse(it) })
+
+                    val location = doc.getString("location") ?: ""
+                    val addressParts = location.split(",").map { it.trim() }
+
+                    if (addressParts.size == 2) {
+                        val streetPart = addressParts[0]
+                        val cityPart = addressParts[1]
+
+                        val streetParts = streetPart.split(" ")
+                        street = streetParts.dropLast(1).joinToString(" ")
+                        building = streetParts.last()
+
+                        val cityParts = cityPart.split(" ")
+                        zip = cityParts.firstOrNull() ?: ""
+                        city = cityParts.drop(1).joinToString(" ")
+                    }
+
+                }
+        }
+    }
 
     val launcher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.OpenMultipleDocuments()
@@ -280,8 +318,16 @@ fun CreateAdScreen(
             Card(
                 onClick = {
                     val fullAddress = "$street $building, $zip $city"
-                    viewModel.createAd(title, description, price, date, imageUris.toList(), context, fullAddress)
-                    navController.popBackStack()
+
+                    if (adId != null) {
+                        viewModel.updateAd(adId, title, description, price, date, imageUris.toList(), context, fullAddress)
+                    } else {
+                        viewModel.createAd(title, description, price, date, imageUris.toList(), context, fullAddress)
+                    }
+                    navController.navigate("adDetails/$adId") {
+                        popUpTo("editAd/$adId") { inclusive = true }
+                    }
+
                 },
                 modifier = Modifier
                     .fillMaxWidth()
@@ -291,7 +337,7 @@ fun CreateAdScreen(
             ) {
                 Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
                     Text(
-                        text = "Dodaj ogłoszenie",
+                        text = if (adId != null) "Edytuj ogłoszenie" else "Dodaj ogłoszenie",
                         color = MaterialTheme.colorScheme.onPrimary,
                         style = MaterialTheme.typography.bodyLarge
                     )

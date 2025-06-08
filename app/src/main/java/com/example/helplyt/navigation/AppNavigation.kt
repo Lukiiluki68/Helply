@@ -116,7 +116,10 @@ fun AppNavigation(
                 navController = navController
             )
         }
-
+        composable("editAd/{adId}") { backStackEntry ->
+            val adId = backStackEntry.arguments?.getString("adId")
+            CreateAdScreen(navController = navController, adId = adId)
+        }
 
         // Dodana trasa do szczegółów ogłoszenia
         composable(
