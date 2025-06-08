@@ -321,13 +321,19 @@ fun CreateAdScreen(
 
                     if (adId != null) {
                         viewModel.updateAd(adId, title, description, price, date, imageUris.toList(), context, fullAddress)
+                        navController.navigate("adDetails/$adId") {
+                            popUpTo("editAd/$adId") { inclusive = true }
+                        }
                     } else {
-                        viewModel.createAd(title, description, price, date, imageUris.toList(), context, fullAddress)
+                        viewModel.createAd(
+                            title, description, price, date, imageUris.toList(), context, fullAddress,
+                            onSuccess = { newAdId ->
+                                navController.navigate("adDetails/$newAdId") {
+                                    popUpTo("createAd") { inclusive = true }
+                                }
+                            }
+                        )
                     }
-                    navController.navigate("adDetails/$adId") {
-                        popUpTo("editAd/$adId") { inclusive = true }
-                    }
-
                 },
                 modifier = Modifier
                     .fillMaxWidth()

@@ -3,6 +3,7 @@ package com.example.helplyt.presentation.ad_details
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
+import com.example.app.data.repository.AdRepositoryImpl
 import com.example.helplyt.domain.model.UserProfile
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -17,13 +18,15 @@ data class Ad(
     val executionDate: String = "",
     val location: String = "",
     val userId: String = "",
-    val imageUrls: List<String> = emptyList() // Dodano to pole
+    val imageUrls: List<String> = emptyList(),
+    val imageUrl: String = "",
+    val acceptedUserId: String? = null
 )
 
 
 class AdDetailsViewModel(private val adId: String) : ViewModel() {
     private val db = FirebaseFirestore.getInstance()
-
+    private val repository = AdRepositoryImpl()
     private val _adData = MutableStateFlow<Ad?>(null)
     val adData: StateFlow<Ad?> = _adData.asStateFlow()
 
@@ -50,6 +53,20 @@ class AdDetailsViewModel(private val adId: String) : ViewModel() {
                 }
         }
     }
+    fun acceptAd(adId: String, userId: String, onSuccess: () -> Unit) {
+        viewModelScope.launch {
+            try {
+                repository.acceptAd(adId, userId)
+                onSuccess()
+            } catch (e: Exception) {
+                // Obsługa błędu np. Log.e(...)
+            }
+        }
+    }
+    fun reload() {
+        loadAdDetails()
+    }
+
 }
 
 class AdDetailsViewModelFactory(private val adId: String) : ViewModelProvider.Factory {

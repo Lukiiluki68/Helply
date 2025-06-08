@@ -1,7 +1,7 @@
 package com.example.app.domain.use_case
 
+import Ad
 import com.example.app.data.repository.AdRepository
-import com.example.app.model.Ad
 
 class CreateAdUseCase(
     private val repository: AdRepository

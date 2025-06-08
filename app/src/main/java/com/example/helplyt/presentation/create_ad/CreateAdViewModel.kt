@@ -24,10 +24,11 @@ class CreateAdViewModel : ViewModel() {
         date: String,
         imageUris: List<Uri>,
         context: Context,
-        location: String
+        location: String,
+        onSuccess: (String) -> Unit
     ) {
         if (imageUris.isEmpty()) {
-            saveAdToFirestore(title, description, price, date, emptyList(), location)
+            saveAdToFirestore(title, description, price, date, emptyList(), location, onSuccess)
             return
         }
 
@@ -42,7 +43,7 @@ class CreateAdViewModel : ViewModel() {
                         imageUrls.add(downloadUri.toString())
                         uploadedCount++
                         if (uploadedCount == imageUris.size) {
-                            saveAdToFirestore(title, description, price, date, imageUrls, location)
+                            saveAdToFirestore(title, description, price, date, imageUrls, location, onSuccess)
                         }
                     }
                 }
@@ -58,7 +59,8 @@ class CreateAdViewModel : ViewModel() {
         price: String,
         date: String,
         imageUrls: List<String>,
-        location: String
+        location: String,
+        onSuccess: (String) -> Unit
     ) {
         val ad = hashMapOf(
             "title" to title,
@@ -68,6 +70,7 @@ class CreateAdViewModel : ViewModel() {
             "imageUrls" to imageUrls,
             "userId" to userId,
             "location" to location,
+            "acceptedUserId" to null,
             "timestamp" to System.currentTimeMillis()
         )
 
@@ -75,6 +78,7 @@ class CreateAdViewModel : ViewModel() {
             .add(ad)
             .addOnSuccessListener {
                 Log.d("CreateAd", "Ogłoszenie zapisane: ${it.id}")
+                onSuccess(it.id)
             }
             .addOnFailureListener {
                 Log.e("CreateAd", "Błąd zapisu ogłoszenia", it)
@@ -146,6 +150,7 @@ class CreateAdViewModel : ViewModel() {
             "executionDate" to date,
             "imageUrls" to imageUrls,
             "location" to location,
+            "acceptedUserId" to null,
             "timestamp" to System.currentTimeMillis()
         )
 

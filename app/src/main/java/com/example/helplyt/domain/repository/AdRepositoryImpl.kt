@@ -1,6 +1,6 @@
 package com.example.app.data.repository
 
-import com.example.app.model.Ad
+import Ad
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.tasks.await
 
@@ -11,6 +11,12 @@ class AdRepositoryImpl(
     override suspend fun createAd(ad: Ad) {
         firestore.collection("ads")
             .add(ad)
+            .await()
+    }
+    override suspend fun acceptAd(adId: String, acceptedUserId: String) {
+        firestore.collection("ads")
+            .document(adId)
+            .update("acceptedUserId", acceptedUserId)
             .await()
     }
 }

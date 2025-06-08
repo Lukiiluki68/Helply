@@ -44,10 +44,12 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import coil.compose.rememberAsyncImagePainter
 import com.example.helplyt.presentation.common.MapSinglePinView
+import com.example.helplyt.presentation.my_advertisement.MyAdvertisementViewModel
 import com.google.accompanist.pager.ExperimentalPagerApi
 import com.google.accompanist.pager.HorizontalPager
 import com.google.accompanist.pager.HorizontalPagerIndicator
 import com.google.accompanist.pager.rememberPagerState
+import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 
 @OptIn(ExperimentalPagerApi::class, ExperimentalMaterial3Api::class)
@@ -64,6 +66,8 @@ fun AdDetailsScreen(
     val currentUserId = com.google.firebase.auth.FirebaseAuth.getInstance().currentUser?.uid
     val isOwner = adData?.userId == currentUserId
     var showDeleteDialog by remember { mutableStateOf(false) }
+    var showUnacceptDialog by remember { mutableStateOf(false) }
+    val myAdViewModel: MyAdvertisementViewModel = viewModel()
 
     Scaffold(
         topBar = {
@@ -227,17 +231,35 @@ fun AdDetailsScreen(
                     }
                 }
             } else {
-                Button(
-                    onClick = { showConfirmDialog = true },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(50.dp),
-                    shape = RoundedCornerShape(12.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF4CAF50))
-                ) {
-                    Text("Akceptuj")
+                when {
+                    adData?.acceptedUserId == null -> {
+                        Button(
+                            onClick = { showConfirmDialog = true },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(50.dp),
+                            shape = RoundedCornerShape(12.dp),
+                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF4CAF50))
+                        ) {
+                            Text("Akceptuj")
+                        }
+                    }
+
+                    adData?.acceptedUserId == currentUserId -> {
+                        Button(
+                            onClick = { showUnacceptDialog = true },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(50.dp),
+                            shape = RoundedCornerShape(12.dp),
+                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFF57C00))
+                        ) {
+                            Text("Zrezygnuj")
+                        }
+                    }
                 }
             }
+
 
         }
 
@@ -253,7 +275,13 @@ fun AdDetailsScreen(
                     TextButton(
                         onClick = {
                             showConfirmDialog = false
-                            // navController.navigate("chat/$adId")
+                            val uid = FirebaseAuth.getInstance().currentUser?.uid
+                            if (uid != null) {
+                                viewModel.acceptAd(adId, uid) {
+                                    navController.navigate("chat/$adId")
+                                }
+                            }
+
                         }
                     ) {
                         Text("Tak", color = Color(0xFF4CAF50))
@@ -289,6 +317,33 @@ fun AdDetailsScreen(
             },
             dismissButton = {
                 TextButton(onClick = { showDeleteDialog = false }) {
+                    Text("Anuluj")
+                }
+            }
+        )
+    }
+    if (showUnacceptDialog) {
+        AlertDialog(
+            onDismissRequest = { showUnacceptDialog = false },
+            title = { Text("Potwierdzenie") },
+            text = { Text("Czy na pewno chcesz zrezygnować z tego ogłoszenia?") },
+            confirmButton = {
+                TextButton(onClick = {
+                    showUnacceptDialog = false
+                    FirebaseFirestore.getInstance()
+                        .collection("ads")
+                        .document(adId)
+                        .update("acceptedUserId", null)
+                        .addOnSuccessListener {
+                            myAdViewModel.reload()
+                            navController.popBackStack()
+                        }
+                }) {
+                    Text("Tak")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showUnacceptDialog = false }) {
                     Text("Anuluj")
                 }
             }

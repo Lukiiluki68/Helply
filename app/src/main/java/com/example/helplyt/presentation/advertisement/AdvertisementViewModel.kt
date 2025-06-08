@@ -21,7 +21,10 @@ data class Advertisement(
     val executionDate: String = "",
     val imageUrls: List<String> = emptyList(),
     val userId: String = "",
+    val acceptedUserId: String? = null,
+    val location: String = "",
     val timestamp: Long = 0
+
 ){
     val mainImageUrl: String?
         get() = imageUrls.firstOrNull()
@@ -73,7 +76,7 @@ class AdvertisementViewModel : ViewModel() {
                     val adList = snapshot.documents.mapNotNull { doc ->
                         doc.toObject(Advertisement::class.java)?.copy(id = doc.id)
                     }.filter { ad ->
-                        ad.userId != currentUserId
+                        ad.userId != currentUserId && ad.acceptedUserId == null
                     }
 
                     allAds = adList
