@@ -34,7 +34,12 @@ class MyAdvertisementViewModel : ViewModel() {
                 if (error != null || snapshot == null) return@addSnapshotListener
 
                 val adList = snapshot.documents.mapNotNull { doc ->
-                    doc.toObject(Advertisement::class.java)?.copy(id = doc.id)
+                    val ad = doc.toObject(Advertisement::class.java)
+                    ad?.copy(
+                        id = doc.id,
+                        applicantUserIds = ad.applicantUserIds ?: emptyList()
+                    )
+
                 }
                 _myOwnAds.value = adList
             }

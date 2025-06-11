@@ -22,6 +22,7 @@ data class Advertisement(
     val imageUrls: List<String> = emptyList(),
     val userId: String = "",
     val acceptedUserId: String? = null,
+    val applicantUserIds: List<String> = emptyList(),
     val location: String = "",
     val timestamp: Long = 0
 
@@ -74,8 +75,13 @@ class AdvertisementViewModel : ViewModel() {
 
                     val currentUserId = FirebaseAuth.getInstance().currentUser?.uid
                     val adList = snapshot.documents.mapNotNull { doc ->
-                        doc.toObject(Advertisement::class.java)?.copy(id = doc.id)
-                    }.filter { ad ->
+                        val ad = doc.toObject(Advertisement::class.java)
+                        ad?.copy(
+                            id = doc.id,
+                            applicantUserIds = ad.applicantUserIds ?: emptyList()
+                        )
+                    }
+                        .filter { ad ->
                         ad.userId != currentUserId && ad.acceptedUserId == null
                     }
 

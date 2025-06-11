@@ -71,6 +71,7 @@ class CreateAdViewModel : ViewModel() {
             "userId" to userId,
             "location" to location,
             "acceptedUserId" to null,
+            "applicantUserIds" to emptyList<String>(),
             "timestamp" to System.currentTimeMillis()
         )
 

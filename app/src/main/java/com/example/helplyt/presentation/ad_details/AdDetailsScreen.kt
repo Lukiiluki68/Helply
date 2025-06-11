@@ -2,10 +2,12 @@ package com.example.helplyt.presentation.ad_details
 
 import android.annotation.SuppressLint
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -50,6 +52,7 @@ import com.google.accompanist.pager.HorizontalPager
 import com.google.accompanist.pager.HorizontalPagerIndicator
 import com.google.accompanist.pager.rememberPagerState
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
 
 @OptIn(ExperimentalPagerApi::class, ExperimentalMaterial3Api::class)
@@ -68,6 +71,7 @@ fun AdDetailsScreen(
     var showDeleteDialog by remember { mutableStateOf(false) }
     var showUnacceptDialog by remember { mutableStateOf(false) }
     val myAdViewModel: MyAdvertisementViewModel = viewModel()
+    val applicantUsers by viewModel.applicantUsers.collectAsState()
 
     Scaffold(
         topBar = {
@@ -230,9 +234,65 @@ fun AdDetailsScreen(
                         Text("Usuń")
                     }
                 }
+                Spacer(modifier = Modifier.height(12.dp))
+
+                val selectedUser = applicantUsers.find { it.userId == adData?.acceptedUserId }
+
+                if (selectedUser != null) {
+                    Text(
+                        text = "✅ Wybrany użytkownik: ${selectedUser.username ?: selectedUser.email}",
+                        color = Color(0xFF4CAF50),
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                }
+
+                if (applicantUsers.isNotEmpty() && adData?.acceptedUserId == null) {
+                    Text(
+                        text = "Zgłoszeni użytkownicy:",
+                        style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold)
+                    )
+
+                    applicantUsers.forEach { user ->
+                        Card(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(vertical = 4.dp),
+                            shape = RoundedCornerShape(12.dp)
+                        ) {
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(12.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.SpaceBetween
+                            ) {
+                                Text(
+                                    text = user.username ?: user.email ?: "Użytkownik",
+                                    modifier = Modifier
+                                        .weight(1f)
+                                        .clickable {
+                                            // TODO: nawigacja do profilu użytkownika
+                                        },
+                                    fontWeight = FontWeight.Medium
+                                )
+                                Button(onClick = {
+                                    viewModel.acceptUserForAd(adId, user.userId)
+                                    viewModel.reload()
+                                }) {
+                                    Text("Wybierz")
+                                }
+                            }
+                        }
+                    }
+                }
+
             } else {
+                val hasApplied = adData?.applicantUserIds?.contains(currentUserId) == true
+
+
                 when {
-                    adData?.acceptedUserId == null -> {
+                    !hasApplied -> {
                         Button(
                             onClick = { showConfirmDialog = true },
                             modifier = Modifier
@@ -241,26 +301,30 @@ fun AdDetailsScreen(
                             shape = RoundedCornerShape(12.dp),
                             colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF4CAF50))
                         ) {
-                            Text("Akceptuj")
+                            Text("Zgłoś się")
                         }
                     }
 
-                    adData?.acceptedUserId == currentUserId -> {
+                    hasApplied -> {
                         Button(
-                            onClick = { showUnacceptDialog = true },
+                            onClick = { /* brak akcji */ },
+                            enabled = false,
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .height(50.dp),
                             shape = RoundedCornerShape(12.dp),
-                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFF57C00))
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = Color.LightGray,
+                                disabledContainerColor = Color.LightGray,
+                                disabledContentColor = Color.DarkGray
+                            )
                         ) {
-                            Text("Zrezygnuj")
+                            Text("Zgłoszono się")
                         }
                     }
+
                 }
             }
-
-
         }
 
         // 💬 Dialog potwierdzający
@@ -268,20 +332,23 @@ fun AdDetailsScreen(
             AlertDialog(
                 onDismissRequest = { showConfirmDialog = false },
                 title = { Text("Potwierdzenie") },
-                text = {
-                    Text("Zaakceptowanie ogłoszenia spowoduje przeniesienie do czatu w celu ustalenia szczegółów ze zleceniodawcą. Czy chcesz kontynuować?")
-                },
+                text = { Text("Czy na pewno chcesz zgłosić się do tego ogłoszenia?") },
                 confirmButton = {
                     TextButton(
                         onClick = {
                             showConfirmDialog = false
                             val uid = FirebaseAuth.getInstance().currentUser?.uid
                             if (uid != null) {
-                                viewModel.acceptAd(adId, uid) {
-                                    navController.navigate("chat/$adId")
-                                }
+                                // dodanie zgłoszenia do listy applicants
+                                FirebaseFirestore.getInstance()
+                                    .collection("ads")
+                                    .document(adId)
+                                    .update("applicantUserIds", FieldValue.arrayUnion(currentUserId))
+                                    .addOnSuccessListener {
+                                        // np. pokazanie potwierdzenia lub przejście dalej
+                                        navController.popBackStack()
+                                    }
                             }
-
                         }
                     ) {
                         Text("Tak", color = Color(0xFF4CAF50))
@@ -303,14 +370,11 @@ fun AdDetailsScreen(
             text = { Text("Czy na pewno chcesz usunąć to ogłoszenie?") },
             confirmButton = {
                 TextButton(onClick = {
-                    FirebaseFirestore.getInstance()
-                        .collection("ads")
-                        .document(adId)
-                        .delete()
-                        .addOnSuccessListener {
-                            showDeleteDialog = false
-                            navController.popBackStack()
-                        }
+                    val imageUrls = adData?.imageUrls ?: emptyList()
+                    viewModel.deleteAdWithImages(adId, imageUrls) {
+                        showDeleteDialog = false
+                        navController.popBackStack()
+                    }
                 }) {
                     Text("Tak")
                 }
