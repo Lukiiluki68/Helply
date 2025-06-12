@@ -53,6 +53,7 @@ fun ProfileScreen(
     var showPaymentDialog by remember { mutableStateOf(false) }
     var showNotificationDialog by remember { mutableStateOf(false) }
     var showDeleteDialog by remember { mutableStateOf(false) }
+    val userId = FirebaseAuth.getInstance().currentUser?.uid
 
     Scaffold(
         topBar = {
@@ -111,7 +112,12 @@ fun ProfileScreen(
                 label = "Twoje dane",
                 onClick = { showDataDialog = true }
             )
-
+            ProfileOption(
+                icon = Icons.Default.ThumbUp,
+                label = "Zobacz opinie",
+                onClick = {
+                    navController.navigate("myopinion/${userId}")                }
+            )
             ProfileOption(
                 icon = Icons.Default.Lock,
                 label = "Hasło",

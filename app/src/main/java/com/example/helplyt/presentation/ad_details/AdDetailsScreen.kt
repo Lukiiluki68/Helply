@@ -95,16 +95,26 @@ fun AdDetailsScreen(
         ) {
             // 📢 Ogłoszenie od
             val displayName = userData?.username?.ifBlank { userData?.email } ?: "Nieznany użytkownik"
-            Surface(
-                color = Color(0xFFFFEBEE),
-                shape = RoundedCornerShape(8.dp)
+            val userId = adData?.userId ?: "Nieznany użytkownik"
+
+            Box(
+                modifier = Modifier
+                    .padding(4.dp)
+                    .clickable {
+                        navController.navigate("userProfile/$userId") // przejście do profilu z opiniami
+                    }
             ) {
-                Text(
-                    text = "📢 Ogłoszenie od: $displayName",
-                    modifier = Modifier.padding(8.dp),
-                    color = Color(0xFFD32F2F),
-                    style = MaterialTheme.typography.bodyMedium
-                )
+                Surface(
+                    color = Color(0xFFFFEBEE),
+                    shape = RoundedCornerShape(8.dp)
+                ) {
+                    Text(
+                        text = "📢 Ogłoszenie od: $displayName",
+                        modifier = Modifier.padding(8.dp),
+                        color = Color(0xFFD32F2F),
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+                }
             }
 
             // 🏷 Tytuł ogłoszenia
@@ -272,7 +282,7 @@ fun AdDetailsScreen(
                                     modifier = Modifier
                                         .weight(1f)
                                         .clickable {
-                                            // TODO: nawigacja do profilu użytkownika
+                                            navController.navigate("userProfile/${user.userId}")
                                         },
                                     fontWeight = FontWeight.Medium
                                 )

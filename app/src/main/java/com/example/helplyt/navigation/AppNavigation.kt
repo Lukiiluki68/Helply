@@ -6,6 +6,7 @@ import LoginScreen
 import LoginViewModel
 import ProfileScreen
 import RegisterScreen
+import UserProfileOpinionScreen
 import androidx.compose.runtime.Composable
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
@@ -20,11 +21,8 @@ import com.example.helplyt.presentation.profile.ChangePasswordScreen
 import com.example.helplyt.presentation.profile.ProfileViewModel
 import com.example.helplyt.presentation.profile.SetupProfileScreen
 import com.example.helplyt.presentation.my_advertisement.MyAdvertisementScreen
-
-
-
-
-
+import com.example.helplyt.presentation.my_advertisement.MyOpinionScreen
+import com.example.helplyt.presentation.user_opinions.AddOpinionScreen
 
 
 sealed class Screen(val route: String) {
@@ -105,6 +103,13 @@ fun AppNavigation(
                 viewModel = profileViewModel
             )
         }
+        composable(
+            route = "myopinion/{userId}",
+            arguments = listOf(navArgument("userId") { type = NavType.StringType })
+        ) { backStackEntry ->
+            val userId = backStackEntry.arguments?.getString("userId") ?: ""
+            MyOpinionScreen(userId = userId, navController = navController)
+        }
         composable(Screen.SetupProfile.route) {
             SetupProfileScreen(
                 navController = navController,
@@ -120,7 +125,14 @@ fun AppNavigation(
             val adId = backStackEntry.arguments?.getString("adId")
             CreateAdScreen(navController = navController, adId = adId)
         }
-
+        composable("userProfile/{userId}") { backStackEntry ->
+            val userId = backStackEntry.arguments?.getString("userId") ?: return@composable
+            UserProfileOpinionScreen(userId = userId, navController = navController)
+        }
+        composable("addOpinion/{userId}") { backStackEntry ->
+            val recipientUserId = backStackEntry.arguments?.getString("userId") ?: return@composable
+            AddOpinionScreen(recipientUserId = recipientUserId, navController = navController)
+        }
         // Dodana trasa do szczegółów ogłoszenia
         composable(
             route = Screen.AdDetails.route,
