@@ -16,14 +16,15 @@ import androidx.navigation.navArgument
 import com.example.app.presentation.home.HomeScreen
 import com.example.app.presentation.register.RegisterViewModel
 import com.example.helplyt.presentation.ad_details.AdDetailsScreen
+import com.example.helplyt.presentation.chat.ChatListScreen
+import com.example.helplyt.presentation.chat.ChatWithUserScreen
+import com.example.helplyt.presentation.my_advertisement.MyAdvertisementScreen
+import com.example.helplyt.presentation.my_advertisement.MyOpinionScreen
 import com.example.helplyt.presentation.profile.ChangeAddressScreen
 import com.example.helplyt.presentation.profile.ChangePasswordScreen
 import com.example.helplyt.presentation.profile.ProfileViewModel
 import com.example.helplyt.presentation.profile.SetupProfileScreen
-import com.example.helplyt.presentation.my_advertisement.MyAdvertisementScreen
-import com.example.helplyt.presentation.my_advertisement.MyOpinionScreen
 import com.example.helplyt.presentation.user_opinions.AddOpinionScreen
-
 
 sealed class Screen(val route: String) {
     object Login : Screen("login")
@@ -39,8 +40,10 @@ sealed class Screen(val route: String) {
     object ChangeAddress : Screen("changeAddress")
     object SetupProfile : Screen("setupProfile")
     object MyAdvertisements : Screen("myAdvertisements")
-
-
+    object ChatList : Screen("chatList")
+    object ChatWithUser : Screen("chatWith/{ownerId}/{adId}") {
+        fun createRoute(ownerId: String, adId: String) = "chatWith/$ownerId/$adId"
+    }
 }
 
 @Composable
@@ -54,7 +57,7 @@ fun AppNavigation(
         composable(Screen.Login.route) {
             LoginScreen(
                 viewModel = loginViewModel,
-                navController = navController,               // <-- dodaj to
+                navController = navController,
                 onLoginSuccess = { navController.navigate(Screen.Home.route) },
                 onNavigateToRegister = { navController.navigate(Screen.Register.route) }
             )
@@ -67,6 +70,7 @@ fun AppNavigation(
                 onNavigateToLogin = { navController.popBackStack() }
             )
         }
+
         composable(Screen.Home.route) {
             HomeScreen(
                 navController = navController,
@@ -80,60 +84,85 @@ fun AppNavigation(
                 onBack = { navController.popBackStack() }
             )
         }
+
         composable(Screen.Advertisement.route) {
             AdvertisementScreen(
                 navController = navController
             )
         }
+
         composable(Screen.Profile.route) {
             ProfileScreen(
                 navController = navController,
                 viewModel = profileViewModel
             )
         }
-        composable(route = Screen.ChangePassword.route) {
+
+        composable(Screen.ChangePassword.route) {
             ChangePasswordScreen(
                 navController = navController,
                 viewModel = profileViewModel
             )
         }
-        composable(route = Screen.ChangeAddress.route) {
+
+        composable(Screen.ChangeAddress.route) {
             ChangeAddressScreen(
                 navController = navController,
                 viewModel = profileViewModel
             )
         }
-        composable(
-            route = "myopinion/{userId}",
+
+        composable("myopinion/{userId}",
             arguments = listOf(navArgument("userId") { type = NavType.StringType })
         ) { backStackEntry ->
             val userId = backStackEntry.arguments?.getString("userId") ?: ""
             MyOpinionScreen(userId = userId, navController = navController)
         }
+
         composable(Screen.SetupProfile.route) {
             SetupProfileScreen(
                 navController = navController,
                 viewModel = profileViewModel
             )
         }
+
         composable(Screen.MyAdvertisements.route) {
             MyAdvertisementScreen(
                 navController = navController
             )
         }
+
         composable("editAd/{adId}") { backStackEntry ->
             val adId = backStackEntry.arguments?.getString("adId")
             CreateAdScreen(navController = navController, adId = adId)
         }
+
         composable("userProfile/{userId}") { backStackEntry ->
             val userId = backStackEntry.arguments?.getString("userId") ?: return@composable
             UserProfileOpinionScreen(userId = userId, navController = navController)
         }
+
         composable("addOpinion/{userId}") { backStackEntry ->
             val recipientUserId = backStackEntry.arguments?.getString("userId") ?: return@composable
             AddOpinionScreen(recipientUserId = recipientUserId, navController = navController)
         }
-        // Dodana trasa do szczegółów ogłoszenia
+
+        composable(Screen.ChatList.route) {
+            ChatListScreen(navController = navController)
+        }
+
+        composable(
+            route = Screen.ChatWithUser.route,
+            arguments = listOf(
+                navArgument("ownerId") { type = NavType.StringType },
+                navArgument("adId") { type = NavType.StringType }
+            )
+        ) { backStackEntry ->
+            val ownerId = backStackEntry.arguments?.getString("ownerId") ?: return@composable
+            val adId = backStackEntry.arguments?.getString("adId") ?: return@composable
+            ChatWithUserScreen(navController = navController, ownerId = ownerId, adId = adId)
+        }
+
         composable(
             route = Screen.AdDetails.route,
             arguments = listOf(navArgument("adId") { type = NavType.StringType })

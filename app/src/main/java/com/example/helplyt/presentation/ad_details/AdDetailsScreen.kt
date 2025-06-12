@@ -300,6 +300,24 @@ fun AdDetailsScreen(
             } else {
                 val hasApplied = adData?.applicantUserIds?.contains(currentUserId) == true
 
+                Button(
+                    onClick = {
+                        val ownerId = adData?.userId
+                        if (ownerId != null) {
+                            navController.navigate("chatWith/$ownerId/$adId")
+                        }
+                    },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(50.dp),
+                    shape = RoundedCornerShape(12.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFFD600))
+                ) {
+                    Text("💬 Czat z ogłoszeniodawcą", color = Color.White)
+                    println(">> Czat kliknięty: userId=${adData?.userId}, adId=$adId")
+                }
+
+
 
                 when {
                     !hasApplied -> {
@@ -426,3 +444,4 @@ fun AdDetailsScreen(
 
 }
 }
+
