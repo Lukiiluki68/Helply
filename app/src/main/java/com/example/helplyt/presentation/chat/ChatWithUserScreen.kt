@@ -2,6 +2,7 @@ package com.example.helplyt.presentation.chat
 
 import android.net.Uri
 import android.os.Environment
+import android.util.Log
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
@@ -14,6 +15,8 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.imePadding
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
@@ -47,10 +50,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.core.content.FileProvider
 import androidx.navigation.NavController
+import coil.compose.AsyncImage
 import coil.compose.rememberAsyncImagePainter
 import com.example.helplyt.domain.model.Chat
 import com.example.helplyt.domain.model.Message
@@ -64,6 +69,7 @@ import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 import java.util.UUID
+import com.example.helplyt.R
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -167,7 +173,9 @@ fun ChatWithUserScreen(
             Row(
                 Modifier
                     .fillMaxWidth()
-                    .padding(8.dp),
+                    .padding(4.dp)
+                    .navigationBarsPadding()
+                    .imePadding(),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
@@ -205,7 +213,8 @@ fun ChatWithUserScreen(
                         db.collection("chats").document(chatId)
                             .update(
                                 "lastMessage", msg.content,
-                                "lastTimestamp", msg.timestamp
+                                "lastTimestamp", msg.timestamp,
+                                "lastSenderId", currentUserId
                             )
                         messageText = ""
                     }
@@ -258,14 +267,16 @@ fun ChatWithUserScreen(
                         horizontalAlignment = if (isMine) Alignment.End else Alignment.Start
                     ) {
                         Surface(
-                            color = if (isMine) Color(0xFF4CAF50) else Color(0xFFB71C1C),
+                            color = if (isMine) Color(0xFF4CAF50) else Color(0xFF90A4AE),
                             shape = MaterialTheme.shapes.medium
                         ) {
                             Column(Modifier.padding(10.dp)) {
                                 if (!msg.imageUrl.isNullOrEmpty()) {
-                                    Image(
-                                        painter = rememberAsyncImagePainter(msg.imageUrl),
+                                    AsyncImage(
+                                        model = msg.imageUrl,
                                         contentDescription = "Zdjęcie",
+                                        placeholder = painterResource(R.drawable.ic_placeholder),
+                                        error = painterResource(R.drawable.ic_broken_image),
                                         modifier = Modifier
                                             .widthIn(max = 240.dp)
                                             .padding(bottom = 4.dp)
@@ -347,18 +358,27 @@ private fun uploadImage(
     val fileRef = storage.reference.child("chat_images/$chatId/$fileName")
 
     fileRef.putFile(uri)
-        .continueWithTask { fileRef.downloadUrl }
-        .addOnSuccessListener { downloadUri ->
-            val msg = Message(
-                senderId = currentUserId,
-                content = "",
-                timestamp = System.currentTimeMillis(),
-                imageUrl = downloadUri.toString(),
-                seenBy = listOf(currentUserId)
-            )
-            db.collection("chats").document(chatId)
-                .collection("messages").add(msg)
-            db.collection("chats").document(chatId)
-                .update("lastMessage", "🖼️ zdjęcie", "lastTimestamp", msg.timestamp)
+        .addOnSuccessListener {
+            fileRef.downloadUrl.addOnSuccessListener { downloadUri ->
+                val msg = Message(
+                    senderId = currentUserId,
+                    content = "",
+                    timestamp = System.currentTimeMillis(),
+                    imageUrl = downloadUri.toString(),
+                    seenBy = listOf(currentUserId)
+                )
+                db.collection("chats").document(chatId)
+                    .collection("messages").add(msg)
+                db.collection("chats").document(chatId)
+                    .update(
+                        "lastMessage", "🖼️ zdjęcie",
+                        "lastTimestamp", msg.timestamp,
+                        "lastSenderId", currentUserId
+                    )
+            }
         }
+        .addOnFailureListener {
+            Log.e("uploadImage", "Błąd przy przesyłaniu zdjęcia", it)
+        }
+
 }

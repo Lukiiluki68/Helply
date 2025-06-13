@@ -148,7 +148,8 @@ fun AppNavigation(
         }
 
         composable(Screen.ChatList.route) {
-            ChatListScreen(navController = navController)
+            ChatListScreen(
+                navController = navController)
         }
 
         composable(

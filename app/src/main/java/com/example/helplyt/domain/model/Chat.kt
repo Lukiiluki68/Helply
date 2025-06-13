@@ -6,5 +6,6 @@ data class Chat(
     val adTitle: String = "", // np. "Pomoc w przeprowadzce"
     val adId: String = "",
     val lastMessage: String = "",
-    val lastTimestamp: Long = 0
+    val lastTimestamp: Long = 0,
+    val lastSenderId: String = ""
 )
